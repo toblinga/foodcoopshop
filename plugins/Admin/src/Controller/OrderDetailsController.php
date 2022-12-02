@@ -281,7 +281,7 @@ class OrderDetailsController extends AdminAppController
                 $storageLocationValue = $orderDetail->product->storage_location->rank;
             }
             $storageLocation[] = $storageLocationValue;
-            $customerName[] = mb_strtolower(StringComponent::slugify($orderDetail->customer->name));
+            $customerName[] = '';# mb_strtolower(StringComponent::slugify($orderDetail->customer->name));
             $manufacturerName[] = mb_strtolower(StringComponent::slugify($orderDetail->product->manufacturer->name));
             $productName[] = mb_strtolower(StringComponent::slugify($orderDetail->product_name));
         }
@@ -824,7 +824,7 @@ class OrderDetailsController extends AdminAppController
                     $manufacturerName[] = mb_strtolower(StringComponent::slugify($orderDetail->product->manufacturer->name));
                     $productName[] = mb_strtolower(StringComponent::slugify($orderDetail->product_name));
                     if (!empty($orderDetail->customer)) {
-                        $customerName[] = mb_strtolower(StringComponent::slugify($orderDetail->customer->name));
+                        $customerName[] = '';#mb_strtolower(StringComponent::slugify($orderDetail->customer->name));
                     } else {
                         $customerName[] = '';
                     }
