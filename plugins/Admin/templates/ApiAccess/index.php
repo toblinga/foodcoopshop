@@ -11,6 +11,11 @@ declare(strict_types=1);
  * @link          https://www.foodcoopshop.com
  */
 
+use Cake\Core\Configure;
+
+$this->element('addScript', [
+    'script' => Configure::read('app.jsNamespace') . '.Admin.init();',
+]);
 ?>
 <div class="filter-container">
     <h1><?php echo $title_for_layout; ?></h1>
@@ -25,7 +30,7 @@ declare(strict_types=1);
     </div>
 <?php } ?>
 
-<table class="list">
+<table class="list no-clone-last-row">
     <tr class="sort">
         <th><?php echo __('Name'); ?></th>
         <th><?php echo __('Permissions'); ?></th>
