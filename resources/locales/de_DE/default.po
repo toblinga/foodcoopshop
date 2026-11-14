@@ -5810,3 +5810,18 @@ msgstr "API: Mitglieder ändern"
 
 msgid "Permission_contacts_read"
 msgstr "Kontaktdaten der Mitglieder lesen"
+
+msgid "Share_contact_data"
+msgstr "Kontaktdaten teilen"
+
+msgid "Share_contact_data_explanation"
+msgstr "Ich bin einverstanden, dass Name, E-Mail, Telefon und Adresse an Mitglieder mit dem Recht „Kontaktdaten lesen“ weitergegeben werden (z. B. für das Telefonbuch am Handy). Jederzeit widerrufbar."
+
+msgid "This_member_shares_contact_data."
+msgstr "Dieses Mitglied hat zugestimmt, seine Kontaktdaten zu teilen."
+
+msgid "Action_Log_Member_contacts_exported"
+msgstr "Mitglied: Kontaktdaten exportiert"
+
+msgid "{0}_contacts_exported_via_API_({1})."
+msgstr "{0} Kontakte über die API exportiert ({1})."
