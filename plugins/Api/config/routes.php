@@ -29,7 +29,13 @@ return function (RouteBuilder $routes) {
             ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['GET']);
         $builder->connect('/manufacturers/{id}', ['controller' => 'Manufacturers', 'action' => 'edit'])
             ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['PATCH']);
-        // further resources (customers, contacts) follow in their own feature branches
+        $builder->connect('/customers', ['controller' => 'Customers', 'action' => 'index'])->setMethods(['GET']);
+        $builder->connect('/customers/{id}', ['controller' => 'Customers', 'action' => 'view'])
+            ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['GET']);
+        $builder->connect('/customers/{id}', ['controller' => 'Customers', 'action' => 'edit'])
+            ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['PATCH']);
+        $builder->connect('/contacts', ['controller' => 'Contacts', 'action' => 'index'])->setMethods(['GET']);
+        $builder->connect('/contacts.vcf', ['controller' => 'Contacts', 'action' => 'index', '_ext' => 'vcf'])->setMethods(['GET']);
         $builder->connect('/*', ['controller' => 'Errors', 'action' => 'notFound']);
     });
 };

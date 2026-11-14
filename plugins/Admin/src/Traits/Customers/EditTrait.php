@@ -80,6 +80,9 @@ trait EditTrait
         $this->setRequest($this->getRequest()->withData('Customers.address_customer.lastname', $this->getRequest()->getData('Customers.lastname')));
 
         $this->setRequest($this->getRequest()->withoutData('Customers.active'));
+        if (!$isOwnProfile) {
+            $this->setRequest($this->getRequest()->withoutData('Customers.share_contact_data'));
+        }
         $this->setRequest($this->getRequest()->withoutData('Customers.id_default_group'));
 
         $customer = $customersTable->patchEntity(
@@ -92,6 +95,10 @@ trait EditTrait
                 ]
             ]
             );
+
+        if ($customer->isDirty('share_contact_data')) {
+            $customer->set('share_contact_data_changed', \Cake\I18n\DateTime::now());
+        }
 
         if ($customer->hasErrors()) {
             $this->Flash->error(__('Errors_while_saving!_admin'));

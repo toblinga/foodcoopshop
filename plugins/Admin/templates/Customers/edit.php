@@ -189,6 +189,16 @@ if (Configure::read('appDb.FCS_NEWSLETTER_ENABLED')) {
     ]);
 }
 
+if ($isOwnProfile) {
+    echo $this->Form->control('Customers.share_contact_data', [
+        'label' => __('Share_contact_data').'<span class="after small">'.__('Share_contact_data_explanation').'</span>',
+        'type' => 'checkbox',
+        'escape' => false,
+    ]);
+} elseif ($customer->share_contact_data) {
+    echo '<p class="small">' . __('This_member_shares_contact_data.') . '</p>';
+}
+
 if ($customer->isAdmin() || $customer->isSuperadmin()) {
     echo '<div class="sc"></div>';
     echo '<a target="_blank" style="margin-bottom: 10px;" class="btn btn-outline-light" href="https://signal.group/#CjQKIBEXUVQCyyQu3-7kOgvPIuFDcAN_12WPTAWs4L8kkyGZEhBefC_uCkp2pqHpl8XljqlN"><i class="fa-brands fa-signal-messenger"></i> ' . __('Join signal support group') . '</a>';

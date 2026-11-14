@@ -405,6 +405,9 @@ class ActionLogsTable extends AppTable
                 'name' => __('Action_Log_Tax_rate_deleted')
             ],
 
+            'customer_contacts_exported' => [
+                'name' => __('Action_Log_Member_contacts_exported')
+            ],
             'customer_permissions_changed' => [
                 'name' => __('Action_Log_Member_permissions_changed')
             ],
