@@ -33,10 +33,13 @@ class ApiProductsTest extends AppCakeTestCase
 
     private function api(string $method, string $url, array $body = []): array
     {
-        $this->configRequest(['headers' => [
-            'Authorization' => 'Bearer ' . $this->token,
-            'Content-Type' => 'application/json',
-        ], 'input' => $body ? json_encode($body) : '']);
+        $headers = ['Authorization' => 'Bearer ' . $this->token];
+        $request = ['headers' => $headers];
+        if ($body) {
+            $request = ['headers' => $headers + ['Content-Type' => 'application/json'], 'input' => json_encode($body)];
+        }
+        $this->_request = [];
+        $this->configRequest($request);
         $this->{$method}($url);
         return (array) json_decode((string) $this->_response->getBody(), true);
     }
