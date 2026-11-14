@@ -31,6 +31,10 @@ class ApiProductsTest extends AppCakeTestCase
         $this->token = $this->getTableLocator()->get('ApiTokens')->generate($customerId, 'test', null);
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
     private function api(string $method, string $url, array $body = []): array
     {
         $headers = ['Authorization' => 'Bearer ' . $this->token];
@@ -44,6 +48,9 @@ class ApiProductsTest extends AppCakeTestCase
         return (array) json_decode((string) $this->_response->getBody(), true);
     }
 
+    /**
+     * @param string[] $permissions
+     */
     private function permissions(array $permissions): void
     {
         $this->getTableLocator()->get('CustomerPermissions')
