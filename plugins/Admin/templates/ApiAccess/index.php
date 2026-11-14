@@ -39,16 +39,16 @@ declare(strict_types=1);
                 <?php if ($c->is_api_user) { ?><br><small><?php echo __('API_user'); ?></small><?php } ?>
             </td>
             <td>
-                <?php echo $this->Form->create(null, ['url' => ['action' => 'savePermissions']]); ?>
+                <?php echo $this->Form->create(null, ['url' => ['action' => 'savePermissions'], 'idPrefix' => 'perm-' . $c->id_customer]); ?>
                 <?php echo $this->Form->hidden('customer_id', ['value' => $c->id_customer]); ?>
-                <?php foreach ($allPermissions as $permission => $label) {
-                    echo $this->Form->control('permissions.' . $permission, [
-                        'type' => 'checkbox',
-                        'label' => $label,
-                        'checked' => in_array($permission, $row['permissions']),
-                        'hiddenField' => false,
-                    ]);
-                } ?>
+                <?php // permission names contain dots, so they are sent as a list of values (permissions[]) and not as field names
+                echo $this->Form->control('permissions', [
+                    'type' => 'select',
+                    'multiple' => 'checkbox',
+                    'label' => false,
+                    'options' => $allPermissions,
+                    'val' => $row['permissions'],
+                ]); ?>
                 <?php echo $this->Form->button(__('Save'), ['class' => 'btn btn-outline-light']); ?>
                 <?php echo $this->Form->end(); ?>
             </td>
@@ -89,10 +89,8 @@ declare(strict_types=1);
 <?php echo $this->Form->end(); ?>
 
 <h2 style="margin-top:20px;"><?php echo __('Grant_permissions_to_a_member'); ?></h2>
-<?php echo $this->Form->create(null, ['url' => ['action' => 'savePermissions']]); ?>
+<?php echo $this->Form->create(null, ['url' => ['action' => 'savePermissions'], 'idPrefix' => 'perm-new']); ?>
 <?php echo $this->Form->control('customer_id', ['type' => 'select', 'label' => __('Member'), 'options' => $customersForDropdown, 'empty' => '']); ?>
-<?php foreach ($allPermissions as $permission => $label) {
-    echo $this->Form->control('permissions.' . $permission, ['type' => 'checkbox', 'label' => $label, 'hiddenField' => false]);
-} ?>
+<?php echo $this->Form->control('permissions', ['type' => 'select', 'multiple' => 'checkbox', 'label' => false, 'options' => $allPermissions]); ?>
 <?php echo $this->Form->button(__('Save'), ['class' => 'btn btn-outline-light']); ?>
 <?php echo $this->Form->end(); ?>

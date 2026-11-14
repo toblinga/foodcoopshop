@@ -120,7 +120,7 @@ class ApiAccessAndTokenTest extends AppCakeTestCase
 
         $this->post('/admin/api-access/save-permissions', [
             'customer_id' => $apiUser->id_customer,
-            'permissions' => [CustomerPermissionsTable::API_PRODUCTS_READ => '1'],
+            'permissions' => [CustomerPermissionsTable::API_PRODUCTS_READ],
         ]);
         $this->assertSame([CustomerPermissionsTable::API_PRODUCTS_READ],
             $this->getTableLocator()->get('CustomerPermissions')->getForCustomer($apiUser->id_customer));
