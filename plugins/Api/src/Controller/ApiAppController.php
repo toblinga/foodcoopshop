@@ -33,9 +33,14 @@ class ApiAppController extends Controller
         $identity = $this->getRequest()->getAttribute('identity');
         $this->customer = $identity ? $identity->getOriginalData() : null;
         if ($this->customer === null) {
-            $event->setResult($this->error(401, 'missing or invalid bearer token'));
+            $event->setResult($this->unauthenticated());
             $event->stopPropagation();
         }
+    }
+
+    protected function unauthenticated(): Response
+    {
+        return $this->error(401, 'missing or invalid bearer token');
     }
 
     protected function json(mixed $data, int $status = 200): Response
