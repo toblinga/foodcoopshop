@@ -31,7 +31,7 @@ class Customer extends AppEntity implements IdentityInterface
      */
     public ?array $cart;
     protected array $_virtual = ['name', 'manufacturer'];
-    protected array $_hidden = ['passwd'];
+    protected array $_hidden = ['passwd', 'is_api_user'];
 
     const GROUP_SELF_SERVICE_CUSTOMER = 2;
     const GROUP_MEMBER = 3;

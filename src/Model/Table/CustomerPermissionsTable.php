@@ -19,6 +19,8 @@ use Cake\I18n\DateTime;
  * Explicit permissions per customer, granted in addition to the customer group.
  * Nobody gets them implicitly - not even superadmins - so e.g. access to member contact
  * data has to be granted deliberately.
+ *
+ * @extends \App\Model\Table\AppTable<\App\Model\Entity\CustomerPermission>
  */
 class CustomerPermissionsTable extends AppTable
 {
