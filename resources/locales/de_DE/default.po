@@ -5729,3 +5729,84 @@ msgstr "Keine Auswahl"
 
 msgid "{0} selected"
 msgstr "{0} ausgewählt"
+
+msgid "API_and_permissions"
+msgstr "API und Rechte"
+
+msgid "API_access_intro"
+msgstr "API-Benutzer melden sich nur mit Token an (nie im Shop). Rechte werden ausdrücklich vergeben – auch Superadmins haben sie nicht automatisch."
+
+msgid "New_API_token_shown_only_once"
+msgstr "Neuer API-Token – wird nur jetzt angezeigt, bitte sicher ablegen:"
+
+msgid "Permissions"
+msgstr "Rechte"
+
+msgid "API_tokens"
+msgstr "API-Tokens"
+
+msgid "API_user"
+msgstr "API-Benutzer"
+
+msgid "Revoke"
+msgstr "Widerrufen"
+
+msgid "revoked"
+msgstr "widerrufen"
+
+msgid "last_used"
+msgstr "zuletzt benutzt"
+
+msgid "expires"
+msgstr "läuft ab"
+
+msgid "expires_optional"
+msgstr "Ablaufdatum (optional)"
+
+msgid "Token_name"
+msgstr "Name des Tokens, z. B. LS-Zentrale"
+
+msgid "Create_token"
+msgstr "Token erstellen"
+
+msgid "Create_API_user"
+msgstr "API-Benutzer anlegen"
+
+msgid "Grant_permissions_to_a_member"
+msgstr "Rechte für ein Mitglied vergeben"
+
+msgid "The_API_user_{0}_has_been_created."
+msgstr "Der API-Benutzer {0} wurde angelegt."
+
+msgid "The_permissions_have_been_saved."
+msgstr "Die Rechte wurden gespeichert."
+
+msgid "The_token_has_been_revoked."
+msgstr "Der Token wurde widerrufen."
+
+msgid "Permissions_of_customer_{0}_changed:_{1}"
+msgstr "Rechte von Mitglied {0} geändert: {1}"
+
+msgid "Action_Log_Member_permissions_changed"
+msgstr "Mitglied: Rechte geändert"
+
+msgid "Permission_api_products_read"
+msgstr "API: Produkte lesen"
+
+msgid "Permission_api_products_write"
+msgstr "API: Produkte ändern"
+
+msgid "Permission_api_manufacturers_read"
+msgstr "API: Hersteller lesen"
+
+msgid "Permission_api_manufacturers_write"
+msgstr "API: Hersteller ändern"
+
+msgid "Permission_api_customers_read"
+msgstr "API: Mitglieder lesen"
+
+msgid "Permission_api_customers_write"
+msgstr "API: Mitglieder ändern"
+
+msgid "Permission_contacts_read"
+msgstr "Kontaktdaten der Mitglieder lesen"

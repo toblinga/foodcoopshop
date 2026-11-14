@@ -39,6 +39,10 @@ class RequestPolicy implements RequestPolicyInterface
             $policy = 'Admin\\Policy\\' . $controller . 'Policy';
         }
 
+        if ($plugin == 'Api') {
+            return (new \Api\Policy\ApiRequestPolicy())->canAccess($identity, $request);
+        }
+
         if ($plugin == 'Network') {
             $policy = 'Network\\Policy\\' . $controller . 'Policy';
         }

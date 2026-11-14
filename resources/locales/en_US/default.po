@@ -5412,3 +5412,84 @@ msgstr "Nothing selected"
 
 msgid "{0} selected"
 msgstr "{0} selected"
+
+msgid "API_and_permissions"
+msgstr "API and permissions"
+
+msgid "API_access_intro"
+msgstr "API users authenticate with tokens only (never in the shop). Permissions are granted explicitly - superadmins do not have them automatically."
+
+msgid "New_API_token_shown_only_once"
+msgstr "New API token - shown only now, store it safely:"
+
+msgid "Permissions"
+msgstr "Permissions"
+
+msgid "API_tokens"
+msgstr "API tokens"
+
+msgid "API_user"
+msgstr "API user"
+
+msgid "Revoke"
+msgstr "Revoke"
+
+msgid "revoked"
+msgstr "revoked"
+
+msgid "last_used"
+msgstr "last used"
+
+msgid "expires"
+msgstr "expires"
+
+msgid "expires_optional"
+msgstr "Expiry date (optional)"
+
+msgid "Token_name"
+msgstr "Token name, e.g. LS-Zentrale"
+
+msgid "Create_token"
+msgstr "Create token"
+
+msgid "Create_API_user"
+msgstr "Create API user"
+
+msgid "Grant_permissions_to_a_member"
+msgstr "Grant permissions to a member"
+
+msgid "The_API_user_{0}_has_been_created."
+msgstr "The API user {0} has been created."
+
+msgid "The_permissions_have_been_saved."
+msgstr "The permissions have been saved."
+
+msgid "The_token_has_been_revoked."
+msgstr "The token has been revoked."
+
+msgid "Permissions_of_customer_{0}_changed:_{1}"
+msgstr "Permissions of member {0} changed: {1}"
+
+msgid "Action_Log_Member_permissions_changed"
+msgstr "Member: permissions changed"
+
+msgid "Permission_api_products_read"
+msgstr "API: read products"
+
+msgid "Permission_api_products_write"
+msgstr "API: change products"
+
+msgid "Permission_api_manufacturers_read"
+msgstr "API: read manufacturers"
+
+msgid "Permission_api_manufacturers_write"
+msgstr "API: change manufacturers"
+
+msgid "Permission_api_customers_read"
+msgstr "API: read members"
+
+msgid "Permission_api_customers_write"
+msgstr "API: change members"
+
+msgid "Permission_contacts_read"
+msgstr "Read member contact data"

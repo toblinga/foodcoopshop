@@ -498,6 +498,11 @@ class SlugHelper extends Helper
         return '/admin/manufacturers/add';
     }
 
+    public function getApiAccess(): string
+    {
+        return '/admin/api-access';
+    }
+
     public function getStorageLocationsList(): string
     {
         return '/admin/storage-locations';
