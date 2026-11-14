@@ -86,7 +86,8 @@ class ApiAccessController extends AdminAppController
         $this->getRequest()->allowMethod(['post']);
         $customerId = (int) $this->getRequest()->getData('customer_id');
         $this->getCustomerOrFail($customerId);
-        $permissions = array_keys(array_filter((array) $this->getRequest()->getData('permissions')));
+        $permissions = array_values(array_filter((array) $this->getRequest()->getData('permissions'), 'is_string'));
+        $permissions = array_values(array_filter($permissions, fn($p) => $p !== ''));
         $this->getTableLocator()->get('CustomerPermissions')
             ->setForCustomer($customerId, $permissions, $this->identity->getId());
         $this->getTableLocator()->get('ActionLogs')->customSave(
