@@ -25,6 +25,7 @@ use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Core\Exception\MissingPluginException;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
+use Cake\ORM\TableRegistry;
 use Authentication\Middleware\AuthenticationMiddleware;
 use Authorization\Middleware\AuthorizationMiddleware;
 use Authorization\Middleware\RequestAuthorizationMiddleware;
@@ -104,6 +105,7 @@ class Application extends BaseApplication
         ]);
 
         $this->addPlugin('Admin');
+        $this->addPlugin('Api');
 
         require_once $this->configDir . 'bootstrap_locale.php';
 
@@ -125,6 +127,11 @@ class Application extends BaseApplication
         ];
     }
 
+    private function isRestApiPath(string $path): bool
+    {
+        return $path === '/api/v1' || str_starts_with($path, '/api/v1/');
+    }
+
     public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
     {
 
@@ -132,7 +139,8 @@ class Application extends BaseApplication
 
         $isApiRequest = false;
         if (isset($_SERVER['REQUEST_URI'])) {
-            $isApiRequest = in_array($_SERVER['REQUEST_URI'], $this->getApiUrls());
+            $isApiRequest = in_array($_SERVER['REQUEST_URI'], $this->getApiUrls())
+                || $this->isRestApiPath((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
         }
 
         if ($isApiRequest) {
@@ -150,7 +158,7 @@ class Application extends BaseApplication
         // Token check will be skipped when callback returns `true`.
         $apiUrls = $this->getApiUrls();
         $csrf->skipCheckCallback(function ($request) use ($apiUrls) {
-            return in_array($request->getUri()->getPath(), $apiUrls);
+            return in_array($request->getUri()->getPath(), $apiUrls) || $this->isRestApiPath($request->getUri()->getPath());
         });
 
         $authorizationMiddlewareConfig = [];
@@ -245,6 +253,21 @@ class Application extends BaseApplication
             'resolver' => $ormResolver,
             'fields' => $fields,
         ];
+
+        if ($this->isRestApiPath($request->getUri()->getPath())) {
+            $service->loadAuthenticator('Authentication.Token', [
+                'header' => 'Authorization',
+                'tokenPrefix' => 'Bearer',
+                'identifier' => [
+                    'className' => 'Authentication.Callback',
+                    'callback' => function (array $data) {
+                        $token = (string) ($data['token'] ?? '');
+                        return $token === '' ? null : TableRegistry::getTableLocator()->get('ApiTokens')->findCustomerByPlainToken($token);
+                    },
+                ],
+            ]);
+            return $service;
+        }
 
         $isApiRequest = in_array($request->getUri()->getPath(), $this->getApiUrls());
         if ($isApiRequest) {

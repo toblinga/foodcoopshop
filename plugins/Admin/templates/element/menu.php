@@ -225,6 +225,15 @@ if ($identity->isSuperadmin() || $identity->isAdmin()) {
                 'fa-icon' => 'fa-fw ok fa-cogs'
             ]
         ];
+        if ($identity->isSuperadmin()) {
+            $homepageAdministrationElement['children'][] = [
+                'slug' => $this->Slug->getApiAccess(),
+                'name' => __('API_and_permissions'),
+                'options' => [
+                    'fa-icon' => 'fa-fw ok fa-key'
+                ]
+            ];
+        }
 
     }
 
