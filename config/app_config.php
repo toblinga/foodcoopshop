@@ -95,10 +95,12 @@ return [
 
         'showManufacturerImprint' => true,
         /**
-         * true: only members who consented in their profile (share_contact_data) are part of the contacts API / CardDAV address book
-         * false: all active members (the privacy policy then states that contact data is stored in the operator's address book)
+         * Which members are part of the contacts API / CardDAV address book:
+         * - consent: only members who agreed in their profile (opt-in, checkbox in the profile)
+         * - opt_out: all active members except those who objected in their profile (checkbox in the profile)
+         * - all: all active members, no setting in the profile (the privacy policy informs about it)
          */
-        'contactsRequireConsent' => true,
+        'contactsMode' => 'consent',
         'termsOfUseEnabled' => true,
         'generalTermsAndConditionsEnabled' => true,
         'rightOfWithdrawalEnabled' => true,

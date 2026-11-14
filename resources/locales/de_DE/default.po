@@ -5817,6 +5817,15 @@ msgstr "Kontaktdaten teilen"
 msgid "Share_contact_data_explanation"
 msgstr "Ich bin einverstanden, dass Name, E-Mail, Telefon und Adresse an Mitglieder mit dem Recht „Kontaktdaten lesen“ weitergegeben werden (z. B. für das Telefonbuch am Handy). Jederzeit widerrufbar."
 
+msgid "Contacts_opt_out"
+msgstr "Nicht im Kontakte-Adressbuch speichern"
+
+msgid "Contacts_opt_out_explanation"
+msgstr "Meine Kontaktdaten (Name, Telefon, E-Mail, Adresse) sollen nicht im Adressbuch des Betreibers gespeichert werden."
+
+msgid "This_member_opted_out_of_the_contacts_address_book."
+msgstr "Dieses Mitglied hat dem Kontakte-Adressbuch widersprochen."
+
 msgid "This_member_shares_contact_data."
 msgstr "Dieses Mitglied hat zugestimmt, seine Kontaktdaten zu teilen."
 

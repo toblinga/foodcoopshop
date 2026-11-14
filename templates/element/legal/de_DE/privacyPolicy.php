@@ -142,8 +142,8 @@ Web: <a href="https://www.dsb.gv.at" target="_blank">https://www.dsb.gv.at</a>
   <li>Anwender-/Benutzerdaten (Benutzername, Hashwert des Passworts - nicht für andere auslesbar! - , Benutzerrollen, Benutzerrechte, etc.)</li>
 </ul>
 
-<?php if (!Configure::read('app.contactsRequireConsent')) { ?>
-<p>Name, Telefonnummer(n), E-Mail-Adresse und Anschrift der Mitglieder werden zusätzlich im Adressbuch der Mobiltelefone und Computer des Betreibers gespeichert und mit der Software synchronisiert. Das dient dazu, Mitglieder bei Rückfragen zu Bestellungen, Abholungen und Lieferungen telefonisch oder per Nachricht zu erreichen und eingehende Anrufe und Nachrichten Mitgliedern zuzuordnen. Die Daten werden nicht an Dritte weitergegeben; sie werden gelöscht, sobald das Mitglied nicht mehr aktiv ist.</p>
+<?php if (in_array(Configure::read('app.contactsMode'), ['all', 'opt_out'], true)) { ?>
+<p>Name, Telefonnummer(n), E-Mail-Adresse und Anschrift der Mitglieder werden zusätzlich im Adressbuch der Mobiltelefone und Computer des Betreibers gespeichert und mit der Software synchronisiert. Das dient dazu, Mitglieder bei Rückfragen zu Bestellungen, Abholungen und Lieferungen telefonisch oder per Nachricht zu erreichen und eingehende Anrufe und Nachrichten Mitgliedern zuzuordnen. Die Daten werden nicht an Dritte weitergegeben; sie werden gelöscht, sobald das Mitglied nicht mehr aktiv ist.<?php if (Configure::read('app.contactsMode') === 'opt_out') { ?> Mitglieder können dem im eigenen Profil jederzeit widersprechen.<?php } ?></p>
 <?php } ?>
 
 <p>Für Hersteller werden weiters folgende Daten verarbeitet:</p>

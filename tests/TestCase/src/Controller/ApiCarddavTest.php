@@ -28,7 +28,7 @@ class ApiCarddavTest extends AppCakeTestCase
         parent::setUp();
         $this->permissions([P::CONTACTS_READ]);
         $this->token = $this->getTableLocator()->get('ApiTokens')->generate(Configure::read('test.adminId'), 'carddav test', null);
-        Configure::write('app.contactsRequireConsent', true);
+        Configure::write('app.contactsMode', 'consent');
         $customers = $this->getTableLocator()->get('Customers');
         $customers->updateAll(['share_contact_data' => false], []);
         $customers->updateAll(['share_contact_data' => true], ['id_customer' => Configure::read('test.customerId')]);
@@ -140,10 +140,21 @@ class ApiCarddavTest extends AppCakeTestCase
     {
         $count = fn() => substr_count($this->dav('REPORT', '/api/v1/carddav/contacts/', '<c:addressbook-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:carddav"><d:prop><d:getetag/></d:prop></c:addressbook-query>'), '<d:response>');
         $this->assertSame(1, $count());
-        Configure::write('app.contactsRequireConsent', false);
+        Configure::write('app.contactsMode', 'all');
         $activeMembers = $this->getTableLocator()->get('Customers')->find()->where(['active' => APP_ON, 'is_api_user' => false])->count();
         $this->assertGreaterThan(1, $activeMembers);
         $this->assertSame($activeMembers, $count());
+    }
+
+    public function testOptOutModeHidesOnlyMembersWhoObjected(): void
+    {
+        Configure::write('app.contactsMode', 'opt_out');
+        $customers = $this->getTableLocator()->get('Customers');
+        $activeMembers = $customers->find()->where(['active' => APP_ON, 'is_api_user' => false])->count();
+        $customers->updateAll(['contacts_opt_out' => true], ['id_customer' => Configure::read('test.customerId')]);
+        $body = $this->dav('REPORT', '/api/v1/carddav/contacts/', '<c:addressbook-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:carddav"><d:prop><d:getetag/></d:prop></c:addressbook-query>');
+        $this->assertSame($activeMembers - 1, substr_count($body, '<d:response>'));
+        $this->assertStringNotContainsString(ContactCards::uid(Configure::read('test.customerId')) . '.vcf', $body);
     }
 
     public function testSyncCollectionIsNotSupported(): void

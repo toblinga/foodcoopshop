@@ -82,6 +82,7 @@ trait EditTrait
         $this->setRequest($this->getRequest()->withoutData('Customers.active'));
         if (!$isOwnProfile) {
             $this->setRequest($this->getRequest()->withoutData('Customers.share_contact_data'));
+            $this->setRequest($this->getRequest()->withoutData('Customers.contacts_opt_out'));
         }
         $this->setRequest($this->getRequest()->withoutData('Customers.id_default_group'));
 
