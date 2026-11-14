@@ -18,6 +18,8 @@ use Cake\I18n\DateTime;
 
 /**
  * Bearer tokens for the REST API. Only a SHA-256 hash is stored; the plain token is shown once.
+ *
+ * @extends \App\Model\Table\AppTable<\App\Model\Entity\ApiToken>
  */
 class ApiTokensTable extends AppTable
 {
