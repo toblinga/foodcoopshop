@@ -26,7 +26,7 @@ class ContactCards
     public const DEFAULT_COUNTRY_CODE = '43';
 
     /**
-     * Active members without API users; with app.contactsRequireConsent only those who consented in their profile (share_contact_data).
+     * Active members without API users; depending on app.contactsMode (consent / opt_out / all).
      *
      * @return list<\App\Model\Entity\Customer>
      */
@@ -36,8 +36,11 @@ class ContactCards
             'Customers.active' => APP_ON,
             'Customers.is_api_user' => false,
         ];
-        if (Configure::read('app.contactsRequireConsent')) {
-            $conditions['Customers.share_contact_data'] = true;
+        $mode = Configure::read('app.contactsMode');
+        if ($mode === 'opt_out') {
+            $conditions['Customers.contacts_opt_out'] = false;
+        } elseif ($mode !== 'all') {
+            $conditions['Customers.share_contact_data'] = true; // consent (default)
         }
         return array_values($locator->get('Customers')->find()
             ->contain(['AddressCustomers'])

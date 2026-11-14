@@ -5500,6 +5500,15 @@ msgstr "Share contact data"
 msgid "Share_contact_data_explanation"
 msgstr "I agree that my name, e-mail, phone and address are shared with members who have the permission "read contact data" (e.g. for a phone book). Can be revoked at any time."
 
+msgid "Contacts_opt_out"
+msgstr "Do not store me in the contacts address book"
+
+msgid "Contacts_opt_out_explanation"
+msgstr "My contact data (name, phone, e-mail, address) shall not be stored in the operator's address book."
+
+msgid "This_member_opted_out_of_the_contacts_address_book."
+msgstr "This member objected to the contacts address book."
+
 msgid "This_member_shares_contact_data."
 msgstr "This member agreed to share contact data."
 

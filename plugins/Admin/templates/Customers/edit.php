@@ -189,14 +189,27 @@ if (Configure::read('appDb.FCS_NEWSLETTER_ENABLED')) {
     ]);
 }
 
-if (Configure::read('app.contactsRequireConsent') && $isOwnProfile) {
-    echo $this->Form->control('Customers.share_contact_data', [
-        'label' => __('Share_contact_data').'<span class="after small">'.__('Share_contact_data_explanation').'</span>',
-        'type' => 'checkbox',
-        'escape' => false,
-    ]);
-} elseif (Configure::read('app.contactsRequireConsent') && $customer->share_contact_data) {
-    echo '<p class="small">' . __('This_member_shares_contact_data.') . '</p>';
+$contactsMode = Configure::read('app.contactsMode');
+if ($contactsMode === 'opt_out') {
+    if ($isOwnProfile) {
+        echo $this->Form->control('Customers.contacts_opt_out', [
+            'label' => __('Contacts_opt_out').'<span class="after small">'.__('Contacts_opt_out_explanation').'</span>',
+            'type' => 'checkbox',
+            'escape' => false,
+        ]);
+    } elseif ($customer->contacts_opt_out) {
+        echo '<p class="small">' . __('This_member_opted_out_of_the_contacts_address_book.') . '</p>';
+    }
+} elseif ($contactsMode !== 'all') {
+    if ($isOwnProfile) {
+        echo $this->Form->control('Customers.share_contact_data', [
+            'label' => __('Share_contact_data').'<span class="after small">'.__('Share_contact_data_explanation').'</span>',
+            'type' => 'checkbox',
+            'escape' => false,
+        ]);
+    } elseif ($customer->share_contact_data) {
+        echo '<p class="small">' . __('This_member_shares_contact_data.') . '</p>';
+    }
 }
 
 if ($customer->isAdmin() || $customer->isSuperadmin()) {
