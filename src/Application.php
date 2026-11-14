@@ -129,7 +129,12 @@ class Application extends BaseApplication
 
     private function isRestApiPath(string $path): bool
     {
-        return $path === '/api/v1' || str_starts_with($path, '/api/v1/');
+        return $path === '/api/v1' || str_starts_with($path, '/api/v1/') || $path === '/.well-known/carddav';
+    }
+
+    private function isCarddavPath(string $path): bool
+    {
+        return $path === '/api/v1/carddav' || str_starts_with($path, '/api/v1/carddav/');
     }
 
     public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
@@ -150,6 +155,11 @@ class Application extends BaseApplication
             @header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
             @header('Access-Control-Allow-Headers: Content-Type, Authorization');
             if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+                if (isset($_SERVER['REQUEST_URI']) && $this->isCarddavPath((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))) {
+                    // CardDAV clients look for these headers to recognise an address book server
+                    @header('DAV: 1, 3, addressbook');
+                    @header('Allow: OPTIONS, GET, HEAD, PROPFIND, REPORT');
+                }
                 exit;
             }
 
@@ -181,6 +191,9 @@ class Application extends BaseApplication
         ->add(new AssetMiddleware([
             'cacheTime' => Configure::read('Asset.cacheTime'),
         ]))
+
+        // WebDAV methods (PROPFIND, REPORT) are unknown to the router, see DavMethodMiddleware
+        ->add(new \Api\Middleware\DavMethodMiddleware())
 
         // Ensure routing middleware is added to the queue before CSRF protection middleware.
         ->add($csrf)
@@ -266,6 +279,22 @@ class Application extends BaseApplication
                     },
                 ],
             ]);
+            if ($this->isCarddavPath($request->getUri()->getPath())) {
+                // CardDAV clients (Thunderbird, DAVx5) only know user name + password: any user name, the API token as password
+                $service->loadAuthenticator('CarddavBasic', [
+                    'className' => 'Authentication.Token',
+                    'header' => 'Authorization',
+                    'tokenPrefix' => 'Basic',
+                    'identifier' => [
+                        'className' => 'Authentication.Callback',
+                        'callback' => function (array $data) {
+                            $decoded = base64_decode((string) ($data['token'] ?? ''), true);
+                            $token = $decoded === false || !str_contains($decoded, ':') ? '' : explode(':', $decoded, 2)[1];
+                            return $token === '' ? null : TableRegistry::getTableLocator()->get('ApiTokens')->findCustomerByPlainToken($token);
+                        },
+                    ],
+                ]);
+            }
             return $service;
         }
 

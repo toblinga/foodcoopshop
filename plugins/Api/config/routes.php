@@ -14,7 +14,13 @@ declare(strict_types=1);
 use Cake\Routing\RouteBuilder;
 
 return function (RouteBuilder $routes) {
+    // address book discovery of CardDAV clients (RFC 6764)
+    $routes->connect('/.well-known/carddav', ['plugin' => 'Api', 'controller' => 'Carddav', 'action' => 'wellKnown']);
+
     $routes->plugin('Api', ['path' => '/api/v1'], function (RouteBuilder $builder) {
+        // CardDAV (read-only address book); PROPFIND/REPORT/... all end up in one action
+        $builder->connect('/carddav', ['controller' => 'Carddav', 'action' => 'handle']);
+        $builder->connect('/carddav/*', ['controller' => 'Carddav', 'action' => 'handle']);
         $builder->connect('/me', ['controller' => 'Me', 'action' => 'view'])->setMethods(['GET']);
         $builder->connect('/products', ['controller' => 'Products', 'action' => 'index'])->setMethods(['GET']);
         $builder->connect('/products/{id}', ['controller' => 'Products', 'action' => 'view'])
