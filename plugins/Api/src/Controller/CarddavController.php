@@ -38,7 +38,6 @@ class CarddavController extends ApiAppController
 {
     private const DAV = 'DAV:';
     private const CARD = 'urn:ietf:params:xml:ns:carddav';
-    private const CS = 'http://calendarserver.org/ns/';
 
     private string $prefix = '';
 
@@ -263,7 +262,7 @@ class CarddavController extends ApiAppController
                         . '</d:supported-report-set>',
                 ];
             default:
-                $card = $cards[$resource['customerId']] ?? null;
+                $card = $cards[($resource['customerId'] ?? 0)] ?? null;
                 if ($card === null) {
                     return [];
                 }
@@ -326,7 +325,7 @@ class CarddavController extends ApiAppController
         $requested = $this->requestedProps($dom);
         $cards = in_array($resource['type'], ['book', 'card'], true) || $this->getRequest()->getHeaderLine('Depth') !== '0'
             ? $this->cards() : [];
-        if ($resource['type'] === 'card' && !isset($cards[$resource['customerId']])) {
+        if ($resource['type'] === 'card' && !isset($cards[($resource['customerId'] ?? 0)])) {
             return $this->text(404, 'not found');
         }
 
@@ -419,7 +418,7 @@ class CarddavController extends ApiAppController
             return $this->text(405, 'use PROPFIND/REPORT')->withHeader('Allow', 'OPTIONS, PROPFIND, REPORT');
         }
         $cards = $this->cards();
-        $card = $cards[$resource['customerId']] ?? null;
+        $card = $cards[($resource['customerId'] ?? 0)] ?? null;
         if ($card === null) {
             return $this->text(404, 'not found');
         }
