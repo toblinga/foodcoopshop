@@ -23,7 +23,13 @@ return function (RouteBuilder $routes) {
             ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['PATCH']);
         $builder->connect('/products/{id}/attributes/{attributeId}', ['controller' => 'Products', 'action' => 'editAttribute'])
             ->setPatterns(['id' => '\d+', 'attributeId' => '\d+'])->setPass(['id', 'attributeId'])->setMethods(['PATCH']);
-        // further resources (manufacturers, customers, contacts) follow in their own feature branches
+        $builder->connect('/manufacturers', ['controller' => 'Manufacturers', 'action' => 'index'])->setMethods(['GET']);
+        $builder->connect('/manufacturers', ['controller' => 'Manufacturers', 'action' => 'add'])->setMethods(['POST']);
+        $builder->connect('/manufacturers/{id}', ['controller' => 'Manufacturers', 'action' => 'view'])
+            ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['GET']);
+        $builder->connect('/manufacturers/{id}', ['controller' => 'Manufacturers', 'action' => 'edit'])
+            ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['PATCH']);
+        // further resources (customers, contacts) follow in their own feature branches
         $builder->connect('/*', ['controller' => 'Errors', 'action' => 'notFound']);
     });
 };
