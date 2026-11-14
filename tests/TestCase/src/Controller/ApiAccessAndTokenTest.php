@@ -126,9 +126,14 @@ class ApiAccessAndTokenTest extends AppCakeTestCase
             $this->getTableLocator()->get('CustomerPermissions')->getForCustomer($apiUser->id_customer));
 
         $this->post('/admin/api-access/create-token', ['customer_id' => $apiUser->id_customer, 'name' => 'LSZ', 'expires' => '']);
+        $stored = $this->getTableLocator()->get('ApiTokens')->find()->where(['customer_id' => $apiUser->id_customer])->firstOrFail();
+        $this->assertSame('LSZ', $stored->name);
+        $this->assertSame(64, strlen($stored->token_hash)); // only the SHA-256 hash is stored
+        $this->assertRedirectContains('/admin/api-access');
+
+        // the plain token waits in the session and is shown once on the page
+        $this->session(['Admin.ApiAccess.newToken' => 'fcs_shownonce']);
         $this->get('/admin/api-access');
-        $this->assertResponseContains('fcs_');
-        $this->get('/admin/api-access'); // shown only once
-        $this->assertResponseNotContains('<code style="font-size:15px;user-select:all;">fcs_');
+        $this->assertResponseContains('fcs_shownonce');
     }
 }
