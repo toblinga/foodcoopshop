@@ -28,6 +28,7 @@ class ApiCarddavTest extends AppCakeTestCase
         parent::setUp();
         $this->permissions([P::CONTACTS_READ]);
         $this->token = $this->getTableLocator()->get('ApiTokens')->generate(Configure::read('test.adminId'), 'carddav test', null);
+        Configure::write('app.contactsRequireConsent', true);
         $customers = $this->getTableLocator()->get('Customers');
         $customers->updateAll(['share_contact_data' => false], []);
         $customers->updateAll(['share_contact_data' => true], ['id_customer' => Configure::read('test.customerId')]);
@@ -133,6 +134,16 @@ class ApiCarddavTest extends AppCakeTestCase
 
         $this->dav('GET', '/api/v1/carddav/contacts/' . ContactCards::uid(99999) . '.vcf');
         $this->assertResponseCode(404);
+    }
+
+    public function testWithoutConsentRequirementAllActiveMembersAreListed(): void
+    {
+        $count = fn() => substr_count($this->dav('REPORT', '/api/v1/carddav/contacts/', '<c:addressbook-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:carddav"><d:prop><d:getetag/></d:prop></c:addressbook-query>'), '<d:response>');
+        $this->assertSame(1, $count());
+        Configure::write('app.contactsRequireConsent', false);
+        $activeMembers = $this->getTableLocator()->get('Customers')->find()->where(['active' => APP_ON, 'is_api_user' => false])->count();
+        $this->assertGreaterThan(1, $activeMembers);
+        $this->assertSame($activeMembers, $count());
     }
 
     public function testSyncCollectionIsNotSupported(): void

@@ -94,6 +94,11 @@ return [
         'customerMainNamePart' => 'firstname',
 
         'showManufacturerImprint' => true,
+        /**
+         * true: only members who consented in their profile (share_contact_data) are part of the contacts API / CardDAV address book
+         * false: all active members (the privacy policy then states that contact data is stored in the operator's address book)
+         */
+        'contactsRequireConsent' => true,
         'termsOfUseEnabled' => true,
         'generalTermsAndConditionsEnabled' => true,
         'rightOfWithdrawalEnabled' => true,
