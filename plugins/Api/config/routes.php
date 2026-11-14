@@ -16,7 +16,14 @@ use Cake\Routing\RouteBuilder;
 return function (RouteBuilder $routes) {
     $routes->plugin('Api', ['path' => '/api/v1'], function (RouteBuilder $builder) {
         $builder->connect('/me', ['controller' => 'Me', 'action' => 'view'])->setMethods(['GET']);
-        // further resources (products, manufacturers, customers, contacts) are added per feature branch
+        $builder->connect('/products', ['controller' => 'Products', 'action' => 'index'])->setMethods(['GET']);
+        $builder->connect('/products/{id}', ['controller' => 'Products', 'action' => 'view'])
+            ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['GET']);
+        $builder->connect('/products/{id}', ['controller' => 'Products', 'action' => 'edit'])
+            ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['PATCH']);
+        $builder->connect('/products/{id}/attributes/{attributeId}', ['controller' => 'Products', 'action' => 'editAttribute'])
+            ->setPatterns(['id' => '\d+', 'attributeId' => '\d+'])->setPass(['id', 'attributeId'])->setMethods(['PATCH']);
+        // further resources (manufacturers, customers, contacts) follow in their own feature branches
         $builder->connect('/*', ['controller' => 'Errors', 'action' => 'notFound']);
     });
 };

@@ -51,6 +51,20 @@ class ApiAppController extends Controller
         return $this->json(['error' => ['status' => $status, 'message' => $message] + ($details ? ['details' => $details] : [])], $status);
     }
 
+    /**
+     * JSON request body (the app has no BodyParserMiddleware); form data as fallback.
+     * @return array<string, mixed>
+     */
+    protected function body(): array
+    {
+        $raw = (string) $this->getRequest()->getBody();
+        if ($raw !== '' && str_contains((string) $this->getRequest()->getHeaderLine('Content-Type'), 'json')) {
+            $data = json_decode($raw, true);
+            return is_array($data) ? $data : [];
+        }
+        return (array) $this->getRequest()->getData();
+    }
+
     protected function can(string $permission): bool
     {
         return $this->customer !== null
