@@ -105,6 +105,7 @@ class ApiCustomersContactsTest extends AppCakeTestCase
 
     public function testContactsOnlyWithConsentAndPermission(): void
     {
+        Configure::write('app.contactsRequireConsent', true);
         $customersTable = $this->getTableLocator()->get('Customers');
         $customersTable->updateAll(['share_contact_data' => false], []);
         $customersTable->updateAll(['share_contact_data' => true], ['id_customer' => Configure::read('test.customerId')]);

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Api\Contacts;
 
 use App\Model\Entity\Customer;
+use Cake\Core\Configure;
 use Cake\ORM\Locator\LocatorInterface;
 
 /**
@@ -25,19 +26,22 @@ class ContactCards
     public const DEFAULT_COUNTRY_CODE = '43';
 
     /**
-     * Active members who consented in their profile (share_contact_data), without API users.
+     * Active members without API users; with app.contactsRequireConsent only those who consented in their profile (share_contact_data).
      *
      * @return list<\App\Model\Entity\Customer>
      */
     public static function customers(LocatorInterface $locator): array
     {
+        $conditions = [
+            'Customers.active' => APP_ON,
+            'Customers.is_api_user' => false,
+        ];
+        if (Configure::read('app.contactsRequireConsent')) {
+            $conditions['Customers.share_contact_data'] = true;
+        }
         return array_values($locator->get('Customers')->find()
             ->contain(['AddressCustomers'])
-            ->where([
-                'Customers.active' => APP_ON,
-                'Customers.is_api_user' => false,
-                'Customers.share_contact_data' => true,
-            ])
+            ->where($conditions)
             ->orderBy(['Customers.lastname' => 'ASC', 'Customers.firstname' => 'ASC', 'Customers.id_customer' => 'ASC'])
             ->all()->toList());
     }
