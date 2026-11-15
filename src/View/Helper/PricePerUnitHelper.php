@@ -151,7 +151,7 @@ class PricePerUnitHelper extends Helper
         string|float $unitAmount,
         ): string
     {
-        return $this->MyNumber->formatAsCurrency($priceInclPerUnit) . ' / ' . ($unitAmount > 1 ? $this->MyNumber->formatAsDecimal($unitAmount, 0) . ' ' : '') . $unitName;
+        return $this->MyNumber->formatAsPricePerUnit($priceInclPerUnit) . ' / ' . ($unitAmount > 1 ? $this->MyNumber->formatAsDecimal($unitAmount, 0) . ' ' : '') . $unitName;
     }
 
     public function getPricePerUnitBaseInfoForCart(
@@ -161,7 +161,7 @@ class PricePerUnitHelper extends Helper
         ): string
     {
         // unit-amount must be included non-formatted for locale-based usage in cart.js
-        return '<span class="price-incl-per-unit">'.$this->MyNumber->formatAsCurrency($priceInclPerUnit) . '</span> / <span class="unit-amount">'.($unitAmount > 1 ? $unitAmount : '').'</span>' . ($unitAmount > 1 ? $this->MyNumber->formatAsDecimal($unitAmount, 0) . ' ' : '') . '<span class="unit-name">' . $unitName . '</span>';
+        return '<span class="price-incl-per-unit">'.$this->MyNumber->formatAsPricePerUnit($priceInclPerUnit) . '</span> / <span class="unit-amount">'.($unitAmount > 1 ? $unitAmount : '').'</span>' . ($unitAmount > 1 ? $this->MyNumber->formatAsDecimal($unitAmount, 0) . ' ' : '') . '<span class="unit-name">' . $unitName . '</span>';
     }
 
 }

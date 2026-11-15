@@ -51,6 +51,26 @@ class MyNumberHelper extends NumberHelper
         return $currency;
     }
 
+    /**
+     * Price per unit (e.g. per gram): two decimals as usual, but up to four if the stored value needs them.
+     * 0.09 is still shown as 0.09, 0.09023 as 0.0902 - the value is also read back by cart.js to calculate
+     * the price, so it must not be rounded to two decimals in the output.
+     */
+    public function formatAsPricePerUnit(string|float|int $amount): string
+    {
+        $amount = round((float) $amount, 4);
+        $places = 2;
+        if (abs(round($amount, 2) - $amount) > 0.00001) {
+            $places = abs(round($amount, 3) - $amount) > 0.00001 ? 4 : 3;
+        }
+        if ($places === 2) {
+            return self::formatAsCurrency($amount);
+        }
+        $currency = self::currency($amount + 0.0, 'USD', ['places' => $places]);
+        $currency = str_replace('$', Configure::read('appDb.FCS_CURRENCY_SYMBOL'), $currency);
+        return str_replace('USD', Configure::read('appDb.FCS_CURRENCY_SYMBOL'), $currency);
+    }
+
     public function formatAsCurrencyWithDecimals(string|float|int $amount, int $decimals): string
     {
         $amount = FormatterService::assureCorrectFloat((float) $amount);

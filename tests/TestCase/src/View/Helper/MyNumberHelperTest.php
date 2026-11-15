@@ -16,6 +16,7 @@ declare(strict_types=1);
  */
 use App\Test\TestCase\AppCakeTestCase;
 use App\View\Helper\MyNumberHelper;
+use Cake\Core\Configure;
 use Cake\I18n\I18n;
 use Cake\View\View;
 
@@ -120,4 +121,17 @@ class MyNumberHelperTest extends AppCakeTestCase
         $this->assertEquals($result, 0);
     }
 
+
+    public function testFormatAsPricePerUnit(): void
+    {
+        I18n::setLocale('de_DE');
+        Configure::write('appDb.FCS_CURRENCY_SYMBOL', '€');
+        // usual prices keep their two decimals
+        $this->assertEquals($this->MyNumberHelper->formatAsCurrency(0.09), $this->MyNumberHelper->formatAsPricePerUnit(0.09));
+        $this->assertEquals($this->MyNumberHelper->formatAsCurrency(12.5), $this->MyNumberHelper->formatAsPricePerUnit('12.5000'));
+        // more decimals are shown if the price needs them (price per gram)
+        $this->assertStringContainsString('0,0902', $this->MyNumberHelper->formatAsPricePerUnit(0.0902));
+        $this->assertStringContainsString('0,090', $this->MyNumberHelper->formatAsPricePerUnit(0.0901));
+        $this->assertStringNotContainsString('0,0902', $this->MyNumberHelper->formatAsPricePerUnit(0.09));
+    }
 }
