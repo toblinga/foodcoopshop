@@ -134,4 +134,48 @@ class ApiProductsTest extends AppCakeTestCase
         $this->api('patch', '/api/v1/products/346', ['name' => 'x', 'if_unmodified_since' => '2000-01-01T00:00:00+00:00']);
         $this->assertResponseCode(409);
     }
+
+    public function testChangeTaxRateKeepsGrossPrice(): void
+    {
+        $before = $this->api('get', '/api/v1/products/346');
+        $newRate = $before['tax_rate'] == 10.0 ? 20.0 : 10.0;
+        $taxes = $this->getTableLocator()->get('Taxes');
+        if (!$taxes->find()->where(['rate' => $newRate, 'deleted' => APP_OFF])->count()) {
+            $this->markTestSkipped('no tax with rate ' . $newRate);
+        }
+        $dry = $this->api('patch', '/api/v1/products/346?dry_run=1', ['tax_rate' => $newRate]);
+        $this->assertTrue($dry['dry_run']);
+        $this->assertEquals($before['tax_rate'], $this->api('get', '/api/v1/products/346')['tax_rate']);
+        $result = $this->api('patch', '/api/v1/products/346', ['tax_rate' => $newRate]);
+        $this->assertResponseOk();
+        $this->assertEquals($newRate, $result['product']['tax_rate']);
+        $this->assertEquals($before['gross_price'], $result['product']['gross_price']);
+        $this->api('patch', '/api/v1/products/346', ['tax_rate' => 99.5]);
+        $this->assertResponseCode(422);
+    }
+
+    public function testChangePricePerUnitConvertsGramsToKilogram(): void
+    {
+        $product = $this->api('get', '/api/v1/products/60');
+        $attribute = $product['attributes'][0] ?? null;
+        if ($attribute === null) {
+            $this->markTestSkipped('demo product 60 has no attributes');
+        }
+        // 50 g variant, 0.09 EUR per g (= 90.00 EUR/kg), the usual setup for goods sold by weight
+        $this->getTableLocator()->get('Units')->saveUnits(60, $attribute['attribute_id'], 1, 0.09, 'g', 1, 50, 0);
+        $url = '/api/v1/products/60/attributes/' . $attribute['attribute_id'];
+        $dry = $this->api('patch', $url . '?dry_run=1', ['price_per_unit' => ['price_incl_per_unit' => 90.0]]);
+        $this->assertSame([], $dry['changes']); // same price, only stored in g
+        $result = $this->api('patch', $url, ['price_per_unit' => ['price_incl_per_unit' => 90.23]]);
+        $this->assertResponseOk();
+        $changed = array_values(array_filter($result['product']['attributes'], fn($a) => $a['attribute_id'] === $attribute['attribute_id']))[0];
+        $this->assertSame('kg', $changed['price_per_unit']['name']);
+        $this->assertEquals(90.23, $changed['price_per_unit']['price_incl_per_unit']);
+        $this->assertEquals(0.05, $changed['price_per_unit']['quantity_in_units']);
+        $this->assertEquals(4.51, $changed['gross_price']); // 90.23 * 0.05 = 4.5115
+        $again = $this->api('patch', $url . '?dry_run=1', ['price_per_unit' => ['price_incl_per_unit' => 90.23]]);
+        $this->assertSame([], $again['changes']); // converges, no endless difference
+        $this->api('patch', $url, ['price_per_unit' => ['price_incl_per_unit' => -1]]);
+        $this->assertResponseCode(422);
+    }
 }
