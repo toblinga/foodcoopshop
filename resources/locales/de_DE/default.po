@@ -5790,6 +5790,9 @@ msgstr "Rechte von Mitglied {0} geändert: {1}"
 msgid "Action_Log_Member_permissions_changed"
 msgstr "Mitglied: Rechte geändert"
 
+msgid "Permission_api_orders_read"
+msgstr "API: Bestellungen lesen (enthält Mitgliedernamen)"
+
 msgid "Permission_api_products_read"
 msgstr "API: Produkte lesen"
 

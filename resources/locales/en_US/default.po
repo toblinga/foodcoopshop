@@ -5473,6 +5473,9 @@ msgstr "Permissions of member {0} changed: {1}"
 msgid "Action_Log_Member_permissions_changed"
 msgstr "Member: permissions changed"
 
+msgid "Permission_api_orders_read"
+msgstr "API: read orders (contains member names)"
+
 msgid "Permission_api_products_read"
 msgstr "API: read products"
 
