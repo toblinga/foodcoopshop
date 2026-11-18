@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Api\Controller;
 
 use App\Model\Entity\Product;
+use App\Services\ProductQuantityService;
 use App\Model\Table\CustomerPermissionsTable as P;
 use Cake\Http\Response;
 use Cake\I18n\DateTime;
@@ -124,6 +125,16 @@ class ProductsController extends ApiAppController
             if ($field === 'tax_rate' && $this->taxIdForRate((float) $value) === null) {
                 return $this->error(422, 'unknown tax rate', ['tax_rate' => $value]);
             }
+            if ($field === 'quantity') {
+                // Goods that are counted by weight/volume (price per unit + "use weight as amount") have a decimal
+                // stock in the unit of the product (kg, g, l, ml); everything else is counted in pieces.
+                if (!is_numeric($value)) {
+                    return $this->error(422, 'quantity needs to be a number');
+                }
+                if (($current['quantity_unit'] ?? null) === null && (float) $value != (int) round((float) $value)) {
+                    return $this->error(422, 'quantity needs to be a whole number: this product is counted in pieces', ['quantity' => $value]);
+                }
+            }
             $old = $current[$field] ?? null;
             if ($old != $value) {
                 $changes[$field] = ['old' => $old, 'new' => $value];
@@ -137,7 +148,8 @@ class ProductsController extends ApiAppController
         }
         $productsTable = $this->getTableLocator()->get('Products');
         try {
-            $productsTable->getConnection()->transactional(function () use ($productsTable, $compositeId, $changes, $product) {
+            $countedInUnits = ($current['quantity_unit'] ?? null) !== null;
+            $productsTable->getConnection()->transactional(function () use ($productsTable, $compositeId, $changes, $product, $countedInUnits) {
                 $new = fn($f) => $changes[$f]['new'];
                 if (array_intersect_key($changes, array_flip(['name', 'description_short', 'description', 'unity']))) {
                     $productsTable->changeName([[$compositeId => [
@@ -165,7 +177,8 @@ class ProductsController extends ApiAppController
                     $productsTable->changeStatus([[$compositeId => (int) $new('active')]]);
                 }
                 if (isset($changes['quantity']) || isset($changes['always_available'])) {
-                    $stock = ['quantity' => (int) ($changes['quantity']['new'] ?? 0)];
+                    $quantity = (float) ($changes['quantity']['new'] ?? 0);
+                    $stock = ['quantity' => $countedInUnits ? $quantity : (int) round($quantity)];
                     if (isset($changes['always_available'])) {
                         $stock['always_available'] = (int) $new('always_available');
                     }
@@ -311,8 +324,16 @@ class ProductsController extends ApiAppController
             'amount' => (int) $u->amount,
             'quantity_in_units' => $u->quantity_in_units !== null ? (float) $u->quantity_in_units : null,
         ] : null;
+        // stock: decimal in the unit of the product when counted by weight/volume, otherwise whole pieces
+        $quantityService = new ProductQuantityService();
+        $stock = function ($stockAvailable, $unitEntity) use ($quantityService, $p): array {
+            $quantity = (float) ($stockAvailable->quantity ?? 0);
+            $inUnits = !empty($p->manufacturer) && $quantityService->isAmountBasedOnQuantityInUnits($p, $unitEntity);
+            return [$inUnits ? $quantity : (int) round($quantity), $inUnits ? (string) $unitEntity->name : null];
+        };
         $attributes = [];
         foreach ($p->product_attributes ?? [] as $a) {
+            [$attributeQuantity, $attributeQuantityUnit] = $stock($a->stock_available ?? null, $a->unit_product_attribute ?? null);
             $attributes[] = [
                 'id' => $p->id_product . '-' . $a->id_product_attribute,
                 'attribute_id' => $a->id_product_attribute,
@@ -320,11 +341,13 @@ class ProductsController extends ApiAppController
                 'net_price' => (float) $a->price,
                 'gross_price' => $gross((float) $a->price),
                 'deposit' => (float) ($a->deposit_product_attribute->deposit ?? 0),
-                'quantity' => (int) ($a->stock_available->quantity ?? 0),
+                'quantity' => $attributeQuantity,
+                'quantity_unit' => $attributeQuantityUnit,
                 'always_available' => (bool) ($a->stock_available->always_available ?? false),
                 'price_per_unit' => $unit($a->unit_product_attribute ?? null),
             ];
         }
+        [$productQuantity, $productQuantityUnit] = $stock($p->stock_available ?? null, $p->unit_product ?? null);
         return [
             'id' => $p->id_product,
             'manufacturer' => ['id' => $p->id_manufacturer, 'name' => $p->manufacturer->name ?? ''],
@@ -337,7 +360,8 @@ class ProductsController extends ApiAppController
             'gross_price' => $gross((float) $p->price),
             'deposit' => (float) ($p->deposit_product->deposit ?? 0),
             'active' => (int) $p->active,
-            'quantity' => (int) ($p->stock_available->quantity ?? 0),
+            'quantity' => $productQuantity,
+            'quantity_unit' => $productQuantityUnit,
             'always_available' => (bool) ($p->stock_available->always_available ?? false),
             'price_per_unit' => $unit($p->unit_product ?? null),
             'modified' => $p->modified?->toIso8601String(),

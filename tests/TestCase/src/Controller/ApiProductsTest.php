@@ -178,4 +178,37 @@ class ApiProductsTest extends AppCakeTestCase
         $this->api('patch', $url, ['price_per_unit' => ['price_incl_per_unit' => -1]]);
         $this->assertResponseCode(422);
     }
+
+    public function testStockOfGoodsCountedByWeightIsDecimal(): void
+    {
+        $product = $this->api('get', '/api/v1/products/60');
+        $attribute = $product['attributes'][0] ?? null;
+        if ($attribute === null) {
+            $this->markTestSkipped('demo product 60 has no attributes');
+        }
+        // stock counted in the unit of the product (here g): needs stock management and "use weight as amount"
+        $this->getTableLocator()->get('Products')->updateAll(['is_stock_product' => 1], ['id_product' => 60]);
+        $this->getTableLocator()->get('Manufacturers')->updateAll(['stock_management_enabled' => 1], ['id_manufacturer' => $product['manufacturer']['id']]);
+        $this->getTableLocator()->get('Units')->saveUnits(60, $attribute['attribute_id'], 1, 0.09, 'g', 1, 50, 1);
+        $url = '/api/v1/products/60/attributes/' . $attribute['attribute_id'];
+        $result = $this->api('patch', $url, ['quantity' => 1234.5]);
+        $this->assertResponseOk();
+        $changed = array_values(array_filter($result['product']['attributes'], fn($a) => $a['attribute_id'] === $attribute['attribute_id']))[0];
+        $this->assertSame('g', $changed['quantity_unit']);
+        $this->assertEquals(1234.5, $changed['quantity']); // not cut to a whole number
+        $again = $this->api('patch', $url . '?dry_run=1', ['quantity' => 1234.5]);
+        $this->assertSame([], $again['changes']);
+        $this->api('patch', $url, ['quantity' => 'many']);
+        $this->assertResponseCode(422);
+    }
+
+    public function testStockOfPiecesMustBeWholeNumber(): void
+    {
+        $this->api('patch', '/api/v1/products/346', ['quantity' => 2.5]);
+        $this->assertResponseCode(422); // not silently cut to 2
+        $result = $this->api('patch', '/api/v1/products/346', ['quantity' => 7]);
+        $this->assertResponseOk();
+        $this->assertSame(7, $result['product']['quantity']);
+        $this->assertNull($result['product']['quantity_unit']);
+    }
 }
