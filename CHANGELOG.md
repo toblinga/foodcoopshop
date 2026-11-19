@@ -6,6 +6,10 @@
 
 Das Format basiert auf [keepachangelog.com](http://keepachangelog.com) und verwendet [Semantic Versioning](http://semver.org/).
 
+## unreleased (Fork)
+
+- Neue Einstellung „Abholtag-Ausnahmen“: Einzelne Abholtage (z.B. Weihnachten oder Neujahr) können auf einen früheren Tag verschoben werden, inklusive eigenem Bestellschluss. Die Bestelllisten werden automatisch am Tag nach dem Bestellschluss versendet, alle anderen Abholtage bleiben unverändert. Im Produktkatalog und im Warenkorb wird der verschobene Abholtag angezeigt. Sammelbestellungen werden nicht verschoben, können aber auf den neuen Abholtag gelegt werden. [I#1289](https://github.com/foodcoopshop/foodcoopshop/issues/1289) / [PR#1290](https://github.com/foodcoopshop/foodcoopshop/pull/1290) <a href="https://github.com/mrothauer"><img src="https://github.com/mrothauer.png" width="20"></a>
+
 ## v4.3
 
 - Die Software ist jetzt kompatibel mit PHP 8.5 (ältere PHP-Versionen werden nicht mehr unterstützt). [I#1274](https://github.com/foodcoopshop/foodcoopshop/issues/1274) / [PR#1275](https://github.com/foodcoopshop/foodcoopshop/pull/1275) <a href="https://github.com/mrothauer"><img src="https://github.com/mrothauer.png" width="20"></a>
