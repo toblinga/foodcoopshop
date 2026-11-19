@@ -199,6 +199,12 @@ class ActionLogsTable extends AppTable
                     'manufacturer'
                 ]
             ],
+            'product_changed_via_api' => [
+                'name' => __('Action_Log_Product_changed_via_api'),
+                'access' => [
+                    'manufacturer'
+                ]
+            ],
             'product_remotely_changed' => [
                 'name' => __('Action_Log_Network_module_product_synchronized'),
                 'access' => [

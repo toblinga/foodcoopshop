@@ -192,7 +192,7 @@ class ProductsController extends ApiAppController
             return $this->error(422, $e->getMessage());
         }
         $this->getTableLocator()->get('ActionLogs')->customSave(
-            'product_remotely_changed',
+            'product_changed_via_api',
             $this->customer->id_customer,
             $product->id_product,
             'products',

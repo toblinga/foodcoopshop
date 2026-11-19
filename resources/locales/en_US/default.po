@@ -190,6 +190,9 @@ msgstr "Member: Activated"
 msgid "Action_Log_Member_set_inactive"
 msgstr "Member: Deactivated"
 
+msgid "Action_Log_Product_changed_via_api"
+msgstr "API: product changed"
+
 msgid "Action_Log_Network_module_product_synchronized"
 msgstr "Network module: Products synchronized"
 

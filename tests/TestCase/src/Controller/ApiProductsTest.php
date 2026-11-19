@@ -110,7 +110,7 @@ class ApiProductsTest extends AppCakeTestCase
         $this->assertSame('Neuer Name', $product['name']);
         $this->assertSame(0, $product['active']);
         $log = $this->getTableLocator()->get('ActionLogs')->find()
-            ->where(['type' => 'product_remotely_changed'])->orderBy(['id' => 'DESC'])->first();
+            ->where(['type' => 'product_changed_via_api'])->orderBy(['id' => 'DESC'])->first();
         $this->assertStringContainsString('API (test) 346', $log->text);
     }
 
@@ -200,6 +200,18 @@ class ApiProductsTest extends AppCakeTestCase
         $this->assertSame([], $again['changes']);
         $this->api('patch', $url, ['quantity' => 'many']);
         $this->assertResponseCode(422);
+    }
+
+    public function testApiChangeIsWrittenToTheActionLogWithItsOwnType(): void
+    {
+        $this->api('patch', '/api/v1/products/346', ['active' => 0]);
+        $this->assertResponseOk();
+        $log = $this->getTableLocator()->get('ActionLogs')->find()
+            ->where(['type' => 'product_changed_via_api', 'object_id' => 346, 'object_type' => 'products'])
+            ->orderBy(['id' => 'DESC'])->first();
+        $this->assertNotNull($log);
+        $this->assertStringContainsString('active', $log->text);
+        $this->assertStringContainsString('API (', $log->text);
     }
 
     public function testStockOfPiecesMustBeWholeNumber(): void
