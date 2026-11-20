@@ -123,21 +123,23 @@ class ApiSecurityTest extends AppCakeTestCase
         $customerId = Configure::read('test.customerId');
         $tokens = $this->getTableLocator()->get('ApiTokens');
 
-        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'phone', 'expires' => '']);
-        $default = $tokens->find()->where(['name' => 'phone'])->firstOrFail();
+        // tokens are not reset between tests: unique names
+        $suffix = bin2hex(random_bytes(4));
+        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'phone-' . $suffix, 'expires' => '']);
+        $default = $tokens->find()->where(['name' => 'phone-' . $suffix])->firstOrFail();
         $this->assertNotNull($default->expires);
         $days = DateTime::now()->diffInDays($default->expires);
         $this->assertGreaterThanOrEqual(364, $days);
         $this->assertLessThanOrEqual(366, $days);
 
-        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'forever', 'expires' => '2030-01-01', 'no_expiry' => '1']);
-        $this->assertNull($tokens->find()->where(['name' => 'forever'])->firstOrFail()->expires);
+        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'forever-' . $suffix, 'expires' => '2030-01-01', 'no_expiry' => '1']);
+        $this->assertNull($tokens->find()->where(['name' => 'forever-' . $suffix])->firstOrFail()->expires);
 
-        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'dated', 'expires' => '2027-03-01']);
-        $this->assertSame('2027-03-01', $tokens->find()->where(['name' => 'dated'])->firstOrFail()->expires->format('Y-m-d'));
+        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'dated-' . $suffix, 'expires' => '2027-03-01']);
+        $this->assertSame('2027-03-01', $tokens->find()->where(['name' => 'dated-' . $suffix])->firstOrFail()->expires->format('Y-m-d'));
 
-        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'broken', 'expires' => 'banana']);
-        $this->assertSame(0, $tokens->find()->where(['name' => 'broken'])->count());
+        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'broken-' . $suffix, 'expires' => 'banana']);
+        $this->assertSame(0, $tokens->find()->where(['name' => 'broken-' . $suffix])->count());
     }
 
     public function testCreatingAndRevokingTokensIsLoggedWithoutTheToken(): void

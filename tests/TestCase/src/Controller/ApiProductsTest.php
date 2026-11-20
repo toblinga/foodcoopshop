@@ -111,7 +111,11 @@ class ApiProductsTest extends AppCakeTestCase
         $this->assertSame(0, $product['active']);
         $log = $this->getTableLocator()->get('ActionLogs')->find()
             ->where(['type' => 'product_changed_via_api'])->orderBy(['id' => 'DESC'])->first();
-        $this->assertStringContainsString('API (test) 346', $log->text);
+        // readable entry: token, product name, manufacturer, id and the changes in words
+        $this->assertStringContainsString('API (test):', $log->text);
+        $this->assertStringContainsString('<b>Neuer Name</b>', $log->text);
+        $this->assertStringContainsString('ID 346', $log->text);
+        $this->assertStringContainsString('Status: online → offline', $log->text);
     }
 
     public function testChangeAttributePrice(): void
@@ -210,7 +214,7 @@ class ApiProductsTest extends AppCakeTestCase
             ->where(['type' => 'product_changed_via_api', 'object_id' => 346, 'object_type' => 'products'])
             ->orderBy(['id' => 'DESC'])->first();
         $this->assertNotNull($log);
-        $this->assertStringContainsString('active', $log->text);
+        $this->assertStringContainsString('Status: online → offline', $log->text);
         $this->assertStringContainsString('API (', $log->text);
     }
 
