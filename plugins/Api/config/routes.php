@@ -31,6 +31,7 @@ return function (RouteBuilder $routes) {
             ->setPatterns(['id' => '\d+', 'attributeId' => '\d+'])->setPass(['id', 'attributeId'])->setMethods(['PATCH']);
         $builder->connect('/orders', ['controller' => 'Orders', 'action' => 'index'])->setMethods(['GET']);
         $builder->connect('/manufacturers', ['controller' => 'Manufacturers', 'action' => 'index'])->setMethods(['GET']);
+        $builder->connect('/orders', ['controller' => 'Orders', 'action' => 'add'])->setMethods(['POST']);
         $builder->connect('/manufacturers', ['controller' => 'Manufacturers', 'action' => 'add'])->setMethods(['POST']);
         $builder->connect('/manufacturers/{id}', ['controller' => 'Manufacturers', 'action' => 'view'])
             ->setPatterns(['id' => '\d+'])->setPass(['id'])->setMethods(['GET']);

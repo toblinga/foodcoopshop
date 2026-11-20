@@ -27,6 +27,7 @@ class CustomerPermissionsTable extends AppTable
     public const API_PRODUCTS_READ = 'api.products.read';
     public const API_PRODUCTS_WRITE = 'api.products.write';
     public const API_ORDERS_READ = 'api.orders.read';
+    public const API_ORDERS_WRITE = 'api.orders.write';
     public const API_MANUFACTURERS_READ = 'api.manufacturers.read';
     public const API_MANUFACTURERS_WRITE = 'api.manufacturers.write';
     public const API_CUSTOMERS_READ = 'api.customers.read';
@@ -51,6 +52,7 @@ class CustomerPermissionsTable extends AppTable
             self::API_PRODUCTS_READ => __('Permission_api_products_read'),
             self::API_PRODUCTS_WRITE => __('Permission_api_products_write'),
             self::API_ORDERS_READ => __('Permission_api_orders_read'),
+            self::API_ORDERS_WRITE => __('Permission_api_orders_write'),
             self::API_MANUFACTURERS_READ => __('Permission_api_manufacturers_read'),
             self::API_MANUFACTURERS_WRITE => __('Permission_api_manufacturers_write'),
             self::API_CUSTOMERS_READ => __('Permission_api_customers_read'),

@@ -5479,6 +5479,9 @@ msgstr "Member: permissions changed"
 msgid "Permission_api_orders_read"
 msgstr "API: read orders (contains member names)"
 
+msgid "Permission_api_orders_write"
+msgstr "API: place instant orders for a member"
+
 msgid "Permission_api_products_read"
 msgstr "API: read products"
 

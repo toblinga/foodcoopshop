@@ -254,7 +254,8 @@ class DeliveryRhythmService
         if (Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
             $nextDeliveryDay = '1970-01-01';
         } elseif (OrderCustomerService::isOrderForDifferentCustomerMode() || OrderCustomerService::isSelfServiceModeByUrl()) {
-            $nextDeliveryDay = $this->Time->getCurrentDateForDatabase();
+            // the REST API (POST /api/v1/orders) can place an instant order directly for a later pickup day
+            $nextDeliveryDay = Configure::read('app.apiInstantOrderPickupDay') ?: $this->Time->getCurrentDateForDatabase();
         } else {
             $nextDeliveryDay = $this->getNextPickupDayForProduct($product);
         }

@@ -14,8 +14,12 @@ declare(strict_types=1);
 namespace Api\Controller;
 
 use App\Model\Table\CustomerPermissionsTable as P;
+use App\Services\CartService;
+use Authentication\Identity;
+use Cake\Core\Configure;
 use Cake\Http\Response;
 use Cake\I18n\Date;
+use Cake\Routing\Router;
 
 /**
  * GET /api/v1/orders – ordered products (order details), read only.
@@ -31,6 +35,193 @@ use Cake\I18n\Date;
 class OrdersController extends ApiAppController
 {
     private const MAX_ROWS = 10000;
+    private const MAX_ITEMS = 50;
+    private const MAX_DAYS_AHEAD = 120;
+
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('Flash'); // CartService reports into the flash messages
+    }
+
+    /**
+     * POST /api/v1/orders – instant order for a member ("Sofort-Bestellung"), directly for a chosen pickup day.
+     *
+     * Body: {"customer_id": 12, "pickup_day": "2026-11-27", "items": [{"product_id": 346, "attribute_id": 0,
+     * "amount": 2, "quantity_in_units": 0.8}]}. `?dry_run=1` only checks and returns the prices (nothing is saved).
+     *
+     * It uses the very same cart code as the admin instant order (availability, prices, deposit, tax, stock,
+     * confirmation e-mail, action log "instant order added"), only the pickup day is chosen by the caller instead of
+     * being "today" - so no second step "change pickup day" is needed afterwards.
+     */
+    public function add(): Response
+    {
+        if ($r = $this->requirePermission(P::API_ORDERS_WRITE)) {
+            return $r;
+        }
+        if (Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
+            return $this->error(409, 'not supported while customers select the pickup day themselves');
+        }
+        $body = $this->body();
+        $dryRun = !empty($this->getRequest()->getQuery('dry_run'));
+
+        $pickupDay = $this->parseDay((string) ($body['pickup_day'] ?? ''));
+        if ($pickupDay === null) {
+            return $this->error(422, 'pickup_day needs a date (YYYY-MM-DD)');
+        }
+        $today = new Date();
+        if ($pickupDay->format('Y-m-d') < $today->format('Y-m-d')) {
+            return $this->error(422, 'pickup_day must not be in the past');
+        }
+        if ($pickupDay->format('Y-m-d') > $today->modify('+' . self::MAX_DAYS_AHEAD . ' days')->format('Y-m-d')) {
+            return $this->error(422, 'pickup_day is too far in the future');
+        }
+
+        $items = [];
+        $rawItems = $body['items'] ?? null;
+        if (!is_array($rawItems) || count($rawItems) < 1 || count($rawItems) > self::MAX_ITEMS) {
+            return $this->error(422, 'items needs 1 to ' . self::MAX_ITEMS . ' entries');
+        }
+        foreach (array_values($rawItems) as $i => $raw) {
+            $amount = is_array($raw) ? ($raw['amount'] ?? null) : null;
+            $productId = is_array($raw) ? (int) ($raw['product_id'] ?? 0) : 0;
+            if ($productId < 1 || !is_numeric($amount) || (int) $amount != $amount || (int) $amount < 1
+                || (int) $amount > Configure::read('app.maxProductAmountForCart')) {
+                return $this->error(422, 'items[' . $i . ']: product_id and a whole amount >= 1 are required');
+            }
+            $qiu = $raw['quantity_in_units'] ?? null;
+            if ($qiu !== null && (!is_numeric($qiu) || (float) $qiu <= 0)) {
+                return $this->error(422, 'items[' . $i . ']: quantity_in_units must be a positive number');
+            }
+            $items[] = [
+                'product_id' => $productId,
+                'attribute_id' => (int) ($raw['attribute_id'] ?? 0),
+                'amount' => (int) $amount,
+                'quantity_in_units' => $qiu === null ? -1.0 : (float) $qiu,
+            ];
+        }
+
+        $orderCustomer = $this->getTableLocator()->get('Customers')->find('all',
+            conditions: ['Customers.id_customer' => (int) ($body['customer_id'] ?? 0), 'Customers.active' => 1],
+            contain: ['AddressCustomers'],
+        )->first();
+        if ($orderCustomer === null || !empty($orderCustomer->is_api_user)) {
+            return $this->error(404, 'customer not found or not active');
+        }
+
+        $request = $this->getRequest();
+        $session = $request->getSession();
+        $session->write('OriginalIdentity', $this->customer);
+        $session->write('OrderIdentity', $orderCustomer);
+        Configure::write('app.apiInstantOrderPickupDay', $pickupDay->format('Y-m-d'));
+        $identity = new Identity($orderCustomer);
+        $orderRequest = $request->withAttribute('identity', $identity);
+        $this->setRequest($orderRequest);
+        Router::setRequest($orderRequest);
+
+        $cartService = new CartService($this);
+        $cartFilled = false;
+        try {
+            $cartService->doEmptyCart();
+            $cartFilled = true;
+            $errors = [];
+            $cartProductsTable = $this->getTableLocator()->get('CartProducts');
+            foreach ($items as $i => $item) {
+                $result = $cartProductsTable->add($item['product_id'], $item['attribute_id'], $item['amount'], $item['quantity_in_units']);
+                if (is_array($result)) {
+                    $errors[] = ['item' => $i, 'product_id' => $item['product_id'], 'message' => $this->plain((string) $result['msg'])];
+                }
+            }
+            if ($errors) {
+                return $this->error(422, 'order not possible', ['items' => $errors]);
+            }
+            $identity->setCart($identity->getCart());
+            $cart = $identity->getCart();
+            $cartProductIds = array_map(fn($p) => (int) $p['cartProductId'], $cart['CartProducts']);
+            $summary = $this->summary($cart, $orderCustomer, $pickupDay);
+
+            if ($dryRun) {
+                return $this->json(['dry_run' => true] + $summary);
+            }
+
+            $finished = $cartService->finish();
+            $vars = $this->viewBuilder()->getVars();
+            if (!empty($vars['cartErrors']) || !empty($vars['formErrors'])) {
+                $messages = [];
+                array_walk_recursive($vars['cartErrors'], function ($m) use (&$messages) {
+                    $messages[] = $this->plain((string) $m);
+                });
+                return $this->error(422, 'order not possible', ['items' => array_map(fn($m) => ['message' => $m], $messages)]);
+            }
+            $cartFilled = false; // the cart is saved as an order now
+
+            $orderDetails = $this->getTableLocator()->get('OrderDetails')->find()
+                ->where(['OrderDetails.id_cart_product IN' => $cartProductIds])
+                ->orderBy(['OrderDetails.id_order_detail' => 'ASC'])->all();
+            $rows = [];
+            foreach ($orderDetails as $od) {
+                $rows[] = [
+                    'id' => (int) $od->id_order_detail,
+                    'product_id' => (int) $od->product_id,
+                    'attribute_id' => $od->product_attribute_id ? (int) $od->product_attribute_id : null,
+                    'product_name' => (string) $od->product_name,
+                    'amount' => (int) $od->product_amount,
+                    'pickup_day' => $od->pickup_day?->format('Y-m-d'),
+                    'total_price_tax_incl' => (float) $od->total_price_tax_incl,
+                    'deposit' => (float) $od->deposit,
+                ];
+            }
+            return $this->json(['dry_run' => false, 'cart_id' => (int) $finished['Cart']->id_cart, 'order_details' => $rows] + $summary, 201);
+        } finally {
+            if ($cartFilled) {
+                try {
+                    $cartService->doEmptyCart();
+                } catch (\Throwable) {
+                    // best effort, the cart is only a scratch cart of the API
+                }
+            }
+            Configure::delete('app.apiInstantOrderPickupDay');
+            $session->delete('OrderIdentity');
+            $session->delete('OriginalIdentity');
+            $this->setRequest($request);
+            Router::setRequest($request);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $cart
+     * @return array<string, mixed>
+     */
+    private function summary(array $cart, mixed $customer, Date $pickupDay): array
+    {
+        $items = [];
+        foreach ($cart['CartProducts'] as $p) {
+            $items[] = [
+                'product_name' => (string) ($p['productName'] ?? ''),
+                'unity' => (string) ($p['unity'] ?? ''),
+                'amount' => (int) $p['amount'],
+                'quantity_in_units' => isset($p['quantityInUnits']) ? (float) $p['quantityInUnits'] : null,
+                'unit' => isset($p['unitName']) ? (string) $p['unitName'] : null,
+                'price' => round((float) $p['price'], 2),
+                'deposit' => round((float) $p['deposit'], 2),
+            ];
+        }
+        $sum = round((float) $cart['CartProductSum'], 2);
+        $deposit = round((float) $cart['CartDepositSum'], 2);
+        return [
+            'customer' => ['id' => (int) $customer->id_customer, 'name' => trim((string) $customer->name)],
+            'pickup_day' => $pickupDay->format('Y-m-d'),
+            'items' => $items,
+            'total_price_tax_incl' => $sum,
+            'total_deposit' => $deposit,
+            'total' => round($sum + $deposit, 2),
+        ];
+    }
+
+    private function plain(string $html): string
+    {
+        return trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
 
     public function index(): Response
     {
