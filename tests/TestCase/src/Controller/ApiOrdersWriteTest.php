@@ -116,7 +116,12 @@ class ApiOrdersWriteTest extends AppCakeTestCase
         $this->assertNotEmpty($result['order_details']);
         foreach ($result['order_details'] as $row) {
             $this->assertSame($day, $row['pickup_day'], 'order is created for the chosen day, not for today');
+            foreach (['product_name', 'amount', 'total_price_tax_incl', 'deposit', 'quantity_in_units', 'unit'] as $key) {
+                $this->assertArrayHasKey($key, $row, 'rows carry what the shop stores: name, amount, price');
+            }
         }
+        $this->assertEqualsWithDelta($result['total_price_tax_incl'],
+            array_sum(array_column($result['order_details'], 'total_price_tax_incl')), 0.011, 'rows add up to the sum');
         $orderDetails = $this->getTableLocator()->get('OrderDetails')->find()
             ->where(['OrderDetails.id_order_detail IN' => array_column($result['order_details'], 'id')])->all();
         foreach ($orderDetails as $od) {

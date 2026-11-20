@@ -169,16 +169,21 @@ class OrdersController extends ApiAppController
             $cartFilled = false; // the cart is saved as an order now
 
             $orderDetails = $this->getTableLocator()->get('OrderDetails')->find()
+                ->contain(['OrderDetailUnits'])
                 ->where(['OrderDetails.id_cart_product IN' => $cartProductIds])
                 ->orderBy(['OrderDetails.id_order_detail' => 'ASC'])->all();
             $rows = [];
             foreach ($orderDetails as $od) {
+                $unit = $od->order_detail_unit ?? null;
                 $rows[] = [
                     'id' => (int) $od->id_order_detail,
                     'product_id' => (int) $od->product_id,
                     'attribute_id' => $od->product_attribute_id ? (int) $od->product_attribute_id : null,
+                    // exactly as stored (and shown in the shop's order list): name incl. unity, amount, gross price
                     'product_name' => (string) $od->product_name,
                     'amount' => (int) $od->product_amount,
+                    'quantity_in_units' => $unit && $unit->product_quantity_in_units !== null ? (float) $unit->product_quantity_in_units : null,
+                    'unit' => $unit ? (string) $unit->unit_name : null,
                     'pickup_day' => $od->pickup_day?->format('Y-m-d'),
                     'total_price_tax_incl' => (float) $od->total_price_tax_incl,
                     'deposit' => (float) $od->deposit,
