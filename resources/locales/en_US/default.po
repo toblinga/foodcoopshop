@@ -5538,3 +5538,63 @@ msgstr "Orders: billed without invoices"
 
 msgid "{0,plural,=1{1_order_item_was} other{#_order_items_were}}_marked_as_billed_without_invoices."
 msgstr "{0,plural,=1{1 order item was} other{# order items were}} marked as billed without invoices."
+
+msgid "expires_default_12_months"
+msgstr "Expires on (default: 12 months)"
+
+msgid "No_expiry_token_never_expires"
+msgstr "No expiry date (token never expires)"
+
+msgid "Please_enter_a_valid_date."
+msgstr "Please enter a valid date."
+
+msgid "no_expiry"
+msgstr "no expiry"
+
+msgid "Action_Log_API_token_created"
+msgstr "API: Token created"
+
+msgid "Action_Log_API_token_revoked"
+msgstr "API: Token revoked"
+
+msgid "API_token_{0}_created_for_customer_{1}_(valid_until:_{2})."
+msgstr "API token {0} created for customer {1} (valid until: {2})."
+
+msgid "API_token_{0}_of_customer_{1}_revoked."
+msgstr "API token {0} of customer {1} revoked."
+
+msgid "API_log_field_name"
+msgstr "Name"
+
+msgid "API_log_field_description_short"
+msgstr "Short description"
+
+msgid "API_log_field_description"
+msgstr "Description"
+
+msgid "API_log_field_unity"
+msgstr "Unit"
+
+msgid "API_log_field_gross_price"
+msgstr "Price (gross)"
+
+msgid "API_log_field_deposit"
+msgstr "Deposit"
+
+msgid "API_log_field_active"
+msgstr "Status"
+
+msgid "API_log_field_quantity"
+msgstr "Quantity"
+
+msgid "API_log_field_always_available"
+msgstr "Always available"
+
+msgid "API_log_field_tax_rate"
+msgstr "VAT"
+
+msgid "API_log_field_price_per_unit"
+msgstr "Price per unit"
+
+msgid "Show_product_in_admin"
+msgstr "Show product in product administration"

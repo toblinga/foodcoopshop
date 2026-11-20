@@ -79,7 +79,12 @@ $this->element('addScript', [
                 <?php echo $this->Form->create(null, ['url' => ['action' => 'createToken']]); ?>
                 <?php echo $this->Form->hidden('customer_id', ['value' => $c->id_customer]); ?>
                 <?php echo $this->Form->control('name', ['label' => false, 'placeholder' => __('Token_name'), 'required' => true]); ?>
-                <?php echo $this->Form->control('expires', ['type' => 'date', 'label' => __('expires_optional')]); ?>
+                <?php echo $this->Form->control('expires', [
+                    'type' => 'date',
+                    'label' => __('expires_default_12_months'),
+                    'value' => \Cake\I18n\DateTime::now()->addMonths(12)->format('Y-m-d'),
+                ]); ?>
+                <?php echo $this->Form->control('no_expiry', ['type' => 'checkbox', 'label' => __('No_expiry_token_never_expires')]); ?>
                 <?php echo $this->Form->button(__('Create_token'), ['class' => 'btn btn-outline-light']); ?>
                 <?php echo $this->Form->end(); ?>
             </td>

@@ -17,7 +17,6 @@ use App\Model\Entity\Customer;
 use App\Model\Table\CustomerPermissionsTable as P;
 use App\Services\SanitizeService;
 use Cake\Http\Response;
-use Cake\I18n\DateTime;
 
 /**
  * /api/v1/customers – read and change members (no passwords, no group, no consent on their behalf).
@@ -38,7 +37,11 @@ class CustomersController extends ApiAppController
             $query->where(['Customers.active' => (int) $active]);
         }
         if ($since = $this->getRequest()->getQuery('modified_since')) {
-            $query->where(['Customers.date_upd >=' => new DateTime((string) $since)]);
+            $sinceDate = $this->parseDateTime($since);
+            if ($sinceDate === null) {
+                return $this->error(422, 'modified_since needs a date');
+            }
+            $query->where(['Customers.date_upd >=' => $sinceDate]);
         }
         $list = array_map(fn($c) => $this->toArray($c), $query->all()->toList());
         return $this->json(['count' => count($list), 'customers' => $list]);
@@ -70,7 +73,13 @@ class CustomersController extends ApiAppController
         if ($unknown) {
             return $this->error(422, 'unknown or not changeable fields', ['fields' => array_values($unknown)]);
         }
-        if (!empty($data['if_unmodified_since']) && $customer->date_upd > new DateTime($data['if_unmodified_since'])) {
+        if (!empty($data['if_unmodified_since'])) {
+            $unmodifiedSince = $this->parseDateTime($data['if_unmodified_since']);
+            if ($unmodifiedSince === null) {
+                return $this->error(422, 'if_unmodified_since needs a date');
+            }
+        }
+        if (!empty($unmodifiedSince) && $customer->date_upd > $unmodifiedSince) {
             return $this->error(409, 'customer was modified in the meantime', ['modified' => $customer->date_upd->toIso8601String()]);
         }
         unset($data['if_unmodified_since']);

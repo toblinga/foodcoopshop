@@ -93,6 +93,7 @@ class ApiTokensTable extends AppTable
         }
         $this->updateAll(['last_used' => DateTime::now()], ['id' => $token->id]);
         $customer->set('api_token_name', $token->name);
+        $customer->set('api_token_expires', $token->expires?->toIso8601String());
         return $customer;
     }
 }

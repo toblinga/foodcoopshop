@@ -123,10 +123,19 @@ foreach ($actionLogs as $actionLog) {
     $showLink = false;
 
     // products
-    if ($actionLog->object_id > 0 && $actionLog->object_type == 'products' && ! ($actionLog->type == 'product_set_inactive')) {
+    if ($actionLog->object_id > 0 && $actionLog->object_type == 'products' && ! (in_array($actionLog->type, ['product_set_inactive', 'product_changed_via_api']))) {
         $showLink = true;
         $title = __('Show_product');
         $url = $this->Slug->getProductDetail($actionLog->object_id, '');
+    }
+    // changed via API: the shop page of a product that was just set offline does not exist, so link to the admin list
+    if ($actionLog->object_id > 0 && $actionLog->type == 'product_changed_via_api') {
+        $showLink = true;
+        $title = __('Show_product_in_admin');
+        // the admin product list needs the manufacturer to show anything
+        $productOfLog = \Cake\ORM\TableRegistry::getTableLocator()->get('Products')->find()
+            ->select(['id_manufacturer'])->where(['id_product' => $actionLog->object_id])->first();
+        $url = $this->Slug->getProductAdmin($productOfLog?->id_manufacturer, (int) $actionLog->object_id);
     }
 
     // manufacturers

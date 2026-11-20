@@ -28,6 +28,7 @@ class MeController extends ApiAppController
             'name' => trim($c->firstname . ' ' . $c->lastname),
             'is_api_user' => (bool) $c->is_api_user,
             'token' => $c->get('api_token_name'),
+            'token_expires' => $c->get('api_token_expires'), // null = never expires
             'permissions' => $this->getTableLocator()->get('CustomerPermissions')->getForCustomer($c->id_customer),
         ]);
     }

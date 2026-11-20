@@ -19,7 +19,6 @@ use App\Model\Table\CustomerPermissionsTable as P;
 use App\Services\SanitizeService;
 use Cake\Core\Configure;
 use Cake\Http\Response;
-use Cake\I18n\DateTime;
 
 /**
  * /api/v1/manufacturers – read, create and change manufacturers incl. address.
@@ -90,7 +89,13 @@ class ManufacturersController extends ApiAppController
         if ($unknown) {
             return $this->error(422, 'unknown fields', ['fields' => array_values($unknown)]);
         }
-        if ($isEdit && !empty($data['if_unmodified_since']) && $manufacturer->modified > new DateTime($data['if_unmodified_since'])) {
+        if ($isEdit && !empty($data['if_unmodified_since'])) {
+            $unmodifiedSince = $this->parseDateTime($data['if_unmodified_since']);
+            if ($unmodifiedSince === null) {
+                return $this->error(422, 'if_unmodified_since needs a date');
+            }
+        }
+        if ($isEdit && !empty($unmodifiedSince) && $manufacturer->modified > $unmodifiedSince) {
             return $this->error(409, 'manufacturer was modified in the meantime', ['modified' => $manufacturer->modified->toIso8601String()]);
         }
         unset($data['if_unmodified_since']);

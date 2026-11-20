@@ -17,6 +17,7 @@ use App\Model\Entity\Customer;
 use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\I18n\DateTime;
 
 /**
  * Base controller of the REST API: JSON only, bearer token (see Application::getAuthenticationService),
@@ -68,6 +69,21 @@ class ApiAppController extends Controller
             return is_array($data) ? $data : [];
         }
         return (array) $this->getRequest()->getData();
+    }
+
+    /**
+     * Date or date-time from a request (ISO 8601, "2026-11-20", ...) or null when it is not a valid date.
+     */
+    protected function parseDateTime(mixed $value): ?DateTime
+    {
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+        try {
+            return new DateTime($value);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     protected function can(string $permission): bool

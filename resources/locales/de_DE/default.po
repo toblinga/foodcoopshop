@@ -5855,3 +5855,63 @@ msgstr "Bestellungen: ohne Rechnung abgerechnet"
 
 msgid "{0,plural,=1{1_order_item_was} other{#_order_items_were}}_marked_as_billed_without_invoices."
 msgstr "{0,plural,=1{1 Bestellposition wurde} other{# Bestellpositionen wurden}} ohne Rechnung als abgerechnet markiert."
+
+msgid "expires_default_12_months"
+msgstr "Läuft ab am (Standard: 12 Monate)"
+
+msgid "No_expiry_token_never_expires"
+msgstr "Kein Ablaufdatum (Token läuft nie ab)"
+
+msgid "Please_enter_a_valid_date."
+msgstr "Bitte ein gültiges Datum eingeben."
+
+msgid "no_expiry"
+msgstr "kein Ablauf"
+
+msgid "Action_Log_API_token_created"
+msgstr "API: Token angelegt"
+
+msgid "Action_Log_API_token_revoked"
+msgstr "API: Token widerrufen"
+
+msgid "API_token_{0}_created_for_customer_{1}_(valid_until:_{2})."
+msgstr "API-Token {0} für Mitglied {1} angelegt (gültig bis: {2})."
+
+msgid "API_token_{0}_of_customer_{1}_revoked."
+msgstr "API-Token {0} von Mitglied {1} widerrufen."
+
+msgid "API_log_field_name"
+msgstr "Name"
+
+msgid "API_log_field_description_short"
+msgstr "Kurzbeschreibung"
+
+msgid "API_log_field_description"
+msgstr "Beschreibung"
+
+msgid "API_log_field_unity"
+msgstr "Einheit"
+
+msgid "API_log_field_gross_price"
+msgstr "Preis (brutto)"
+
+msgid "API_log_field_deposit"
+msgstr "Pfand"
+
+msgid "API_log_field_active"
+msgstr "Status"
+
+msgid "API_log_field_quantity"
+msgstr "Menge"
+
+msgid "API_log_field_always_available"
+msgstr "Immer verfügbar"
+
+msgid "API_log_field_tax_rate"
+msgstr "MwSt."
+
+msgid "API_log_field_price_per_unit"
+msgstr "Grundpreis"
+
+msgid "Show_product_in_admin"
+msgstr "Produkt in der Produktverwaltung anzeigen"

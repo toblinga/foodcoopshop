@@ -15,9 +15,9 @@ namespace Api\Controller;
 
 use App\Model\Entity\Product;
 use App\Services\ProductQuantityService;
+use Cake\Core\Configure;
 use App\Model\Table\CustomerPermissionsTable as P;
 use Cake\Http\Response;
-use Cake\I18n\DateTime;
 
 /**
  * /api/v1/products – products incl. attributes (variants).
@@ -49,7 +49,11 @@ class ProductsController extends ApiAppController
             $query->where(['Products.active IN' => [APP_OFF, APP_ON]]); // without deleted
         }
         if (!empty($q['modified_since'])) {
-            $query->where(['Products.modified >=' => new DateTime($q['modified_since'])]);
+            $since = $this->parseDateTime($q['modified_since']);
+            if ($since === null) {
+                return $this->error(422, 'modified_since needs a date');
+            }
+            $query->where(['Products.modified >=' => $since]);
         }
         $products = array_map(fn($p) => $this->toArray($p), $query->all()->toList());
         return $this->json(['count' => count($products), 'products' => $products]);
@@ -77,7 +81,13 @@ class ProductsController extends ApiAppController
         if ($unknown = array_diff(array_keys($data), self::PRODUCT_FIELDS)) {
             return $this->error(422, 'unknown fields', ['fields' => array_values($unknown)]);
         }
-        if (!empty($data['if_unmodified_since']) && $product->modified > new DateTime($data['if_unmodified_since'])) {
+        if (!empty($data['if_unmodified_since'])) {
+            $unmodifiedSince = $this->parseDateTime($data['if_unmodified_since']);
+            if ($unmodifiedSince === null) {
+                return $this->error(422, 'if_unmodified_since needs a date');
+            }
+        }
+        if (!empty($unmodifiedSince) && $product->modified > $unmodifiedSince) {
             return $this->error(409, 'product was modified in the meantime', ['modified' => $product->modified->toIso8601String()]);
         }
         unset($data['if_unmodified_since']);
@@ -191,16 +201,16 @@ class ProductsController extends ApiAppController
         } catch (\Exception $e) {
             return $this->error(422, $e->getMessage());
         }
+        $fresh = $this->baseQuery()->where(['Products.id_product' => $product->id_product])->first();
+        $freshArray = $this->toArray($fresh);
         $this->getTableLocator()->get('ActionLogs')->customSave(
             'product_changed_via_api',
             $this->customer->id_customer,
             $product->id_product,
             'products',
-            'API (' . ($this->customer->get('api_token_name') ?? '-') . ') ' . $compositeId . ': '
-                . join(', ', array_map(fn($f, $c) => $f . ' ' . json_encode($c['old']) . ' → ' . json_encode($c['new']), array_keys($changes), $changes)),
+            $this->logText($freshArray, $compositeId, $changes),
         );
-        $fresh = $this->baseQuery()->where(['Products.id_product' => $product->id_product])->first();
-        return $this->json(['id' => $compositeId, 'changes' => $changes, 'product' => $this->toArray($fresh)]);
+        return $this->json(['id' => $compositeId, 'changes' => $changes, 'product' => $freshArray]);
     }
 
     /**
@@ -312,6 +322,70 @@ class ProductsController extends ApiAppController
     /**
      * @return array<string, mixed>
      */
+    /**
+     * Readable action log entry: who (token), which product (name, variant, manufacturer, id) and what changed,
+     * e.g. "API (ls-zentrale): <b>Honig : 500 g</b> (Imkerei Muster, ID 694): Status: online → offline".
+     *
+     * @param array<string, mixed> $product result of toArray()
+     * @param array<string, array{old: mixed, new: mixed}> $changes
+     */
+    private function logText(array $product, string $compositeId, array $changes): string
+    {
+        $name = (string) $product['name'];
+        foreach ($product['attributes'] ?? [] as $attribute) {
+            if ($attribute['id'] === $compositeId && $attribute['name'] !== '') {
+                $name .= ' : ' . $attribute['name'];
+            }
+        }
+        $parts = [];
+        foreach ($changes as $field => $change) {
+            $parts[] = $this->logFieldLabel($field) . ': ' . $this->logValue($field, $change['old']) . ' → ' . $this->logValue($field, $change['new']);
+        }
+        $manufacturer = (string) ($product['manufacturer']['name'] ?? '');
+        return 'API (' . h((string) ($this->customer->get('api_token_name') ?? '-')) . '): <b>' . h($name) . '</b> ('
+            . ($manufacturer !== '' ? h($manufacturer) . ', ' : '') . 'ID ' . $compositeId . '): ' . join(', ', $parts);
+    }
+
+    private function logFieldLabel(string $field): string
+    {
+        return match ($field) {
+            'name' => __('API_log_field_name'),
+            'description_short' => __('API_log_field_description_short'),
+            'description' => __('API_log_field_description'),
+            'unity' => __('API_log_field_unity'),
+            'gross_price' => __('API_log_field_gross_price'),
+            'deposit' => __('API_log_field_deposit'),
+            'active' => __('API_log_field_active'),
+            'quantity' => __('API_log_field_quantity'),
+            'always_available' => __('API_log_field_always_available'),
+            'tax_rate' => __('API_log_field_tax_rate'),
+            'price_per_unit' => __('API_log_field_price_per_unit'),
+            default => $field,
+        };
+    }
+
+    private function logValue(string $field, mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '–';
+        }
+        $numberHelper = Configure::read('app.numberHelper');
+        return match ($field) {
+            'active' => (int) $value === 1 ? __('online') : __('offline'),
+            'always_available' => $value ? __('yes') : __('no'),
+            'gross_price', 'deposit', 'price_per_unit' => $numberHelper->formatAsCurrency((float) $value),
+            'tax_rate' => rtrim(rtrim(number_format((float) $value, 2, ',', ''), '0'), ',') . ' %',
+            'description_short', 'description' => $this->shorten((string) $value),
+            default => h(is_scalar($value) ? (string) $value : (string) json_encode($value)),
+        };
+    }
+
+    private function shorten(string $text): string
+    {
+        $text = trim((string) preg_replace('/\s+/', ' ', strip_tags($text)));
+        return h(mb_strlen($text) > 60 ? mb_substr($text, 0, 60) . '…' : $text);
+    }
+
     private function toArray(Product $p): array
     {
         $productsTable = $this->getTableLocator()->get('Products');

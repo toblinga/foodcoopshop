@@ -150,10 +150,8 @@ class Application extends BaseApplication
 
         if ($isApiRequest) {
 
-            // q&d solution to enable CORS for api requests
-            @header('Access-Control-Allow-Origin: *');
-            @header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
-            @header('Access-Control-Allow-Headers: Content-Type, Authorization');
+            // No CORS headers on purpose: the API is called by servers and apps with a bearer token, never by
+            // other websites in a browser (cross-origin requests are refused by the browser).
             if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
                 if (isset($_SERVER['REQUEST_URI']) && $this->isCarddavPath((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))) {
                     // CardDAV clients look for these headers to recognise an address book server

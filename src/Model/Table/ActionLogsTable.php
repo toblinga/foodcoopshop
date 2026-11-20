@@ -417,6 +417,12 @@ class ActionLogsTable extends AppTable
             'customer_contacts_exported' => [
                 'name' => __('Action_Log_Member_contacts_exported')
             ],
+            'api_token_created' => [
+                'name' => __('Action_Log_API_token_created'),
+            ],
+            'api_token_revoked' => [
+                'name' => __('Action_Log_API_token_revoked'),
+            ],
             'customer_permissions_changed' => [
                 'name' => __('Action_Log_Member_permissions_changed')
             ],

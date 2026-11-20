@@ -103,12 +103,33 @@ class ApiAccessController extends AdminAppController
         $this->getRequest()->allowMethod(['post']);
         $customerId = (int) $this->getRequest()->getData('customer_id');
         $this->getCustomerOrFail($customerId);
-        $expires = (string) $this->getRequest()->getData('expires');
+        // Default: the token expires after 12 months. "No expiry" has to be chosen explicitly.
+        $expires = trim((string) $this->getRequest()->getData('expires'));
+        if ($this->getRequest()->getData('no_expiry')) {
+            $expiresAt = null;
+        } elseif ($expires === '') {
+            $expiresAt = DateTime::now()->addMonths(12)->setTime(23, 59, 59);
+        } else {
+            try {
+                $expiresAt = new DateTime($expires . ' 23:59:59');
+            } catch (\Throwable) {
+                $this->Flash->error(__('Please_enter_a_valid_date.'));
+                return $this->redirect(['action' => 'index']);
+            }
+        }
+        $tokenName = mb_substr(trim(strip_tags((string) $this->getRequest()->getData('name'))) ?: 'API', 0, 100);
         $plain = $this->getTableLocator()->get('ApiTokens')->generate(
             $customerId,
-            (string) $this->getRequest()->getData('name'),
+            $tokenName,
             $this->identity->getId(),
-            $expires !== '' ? new DateTime($expires . ' 23:59:59') : null,
+            $expiresAt,
+        );
+        // never log the token itself, only who got a token with which name and until when
+        $this->getTableLocator()->get('ActionLogs')->customSave(
+            'api_token_created', $this->identity->getId(), $customerId, 'customers',
+            __('API_token_{0}_created_for_customer_{1}_(valid_until:_{2}).', [
+                '<b>' . h($tokenName) . '</b>', $customerId, $expiresAt ? $expiresAt->format('d.m.Y') : __('no_expiry'),
+            ]),
         );
         // shown exactly once on the next page
         $this->getRequest()->getSession()->write('Admin.ApiAccess.newToken', $plain);
@@ -118,7 +139,15 @@ class ApiAccessController extends AdminAppController
     public function revokeToken(): Response
     {
         $this->getRequest()->allowMethod(['post']);
-        $this->getTableLocator()->get('ApiTokens')->revoke((int) $this->getRequest()->getData('token_id'));
+        $tokensTable = $this->getTableLocator()->get('ApiTokens');
+        $token = $tokensTable->find()->where(['id' => (int) $this->getRequest()->getData('token_id')])->first();
+        $tokensTable->revoke((int) $this->getRequest()->getData('token_id'));
+        if ($token !== null) {
+            $this->getTableLocator()->get('ActionLogs')->customSave(
+                'api_token_revoked', $this->identity->getId(), (int) $token->customer_id, 'customers',
+                __('API_token_{0}_of_customer_{1}_revoked.', ['<b>' . h($token->name) . '</b>', (int) $token->customer_id]),
+            );
+        }
         $this->Flash->success(__('The_token_has_been_revoked.'));
         return $this->redirect(['action' => 'index']);
     }
