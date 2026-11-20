@@ -48,6 +48,7 @@ class ConfigurationHelper extends Helper
             case 'FCS_NEWSLETTER_ENABLED':
             case 'FCS_USER_FEEDBACK_ENABLED':
             case 'FCS_SHOW_ONLY_PRODUCTS_FOR_NEXT_WEEK_FILTER_ENABLED':
+            case 'FCS_BILL_ORDERS_WITHOUT_INVOICES':
                 return Configure::read('app.htmlHelper')->getYesNoArray();
             case 'FCS_LOCALE':
                 return Configure::read('app.implementedLocales');

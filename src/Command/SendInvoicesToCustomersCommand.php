@@ -43,6 +43,19 @@ class SendInvoicesToCustomersCommand extends AppCommand
 
         $this->setCronjobRunDay($args);
 
+        if (Configure::read('appDb.FCS_BILL_ORDERS_WITHOUT_INVOICES')) {
+            // billing happens elsewhere: only mark the past orders as billed - no invoices, no pdfs, no e-mails
+            $orderDetailsTable = $this->getTableLocator()->get('OrderDetails');
+            $count = $orderDetailsTable->markPastOrderDetailsAsBilled(
+                Configure::read('app.timeHelper')->formatToDbFormatDate($this->cronjobRunDay)
+            );
+            $this->stopTimeLogging();
+            $actionLogsTable = $this->getTableLocator()->get('ActionLogs');
+            $message = __('{0,plural,=1{1_order_item_was} other{#_order_items_were}}_marked_as_billed_without_invoices.', [$count]);
+            $actionLogsTable->customSave('orders_billed_without_invoices', 0, 0, 'order_details', $message . '<br />' . $this->getRuntime());
+            return static::CODE_SUCCESS;
+        }
+
         $customersTable->dropManufacturersInNextFind();
         $customers = $customersTable->find('all',
         conditions: [

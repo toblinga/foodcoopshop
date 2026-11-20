@@ -70,6 +70,9 @@ class ActionLogsTable extends AppTable
             'invoice_added' => [
                 'name' => __('Action_Log_Invoice_added'),
             ],
+            'orders_billed_without_invoices' => [
+                'name' => __('Action_Log_Orders_billed_without_invoices'),
+            ],
             'invoice_cancelled' => [
                 'name' => __('Action_Log_Invoice_cancelled'),
             ],

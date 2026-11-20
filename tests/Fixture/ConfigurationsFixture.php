@@ -430,7 +430,14 @@ class ConfigurationsFixture extends AppFixture
             'value' => 'open-sans',
             'type' => 'dropdown',
             'position' => 3630,
-        ]
+        ],
+        [
+            'name' => 'FCS_BILL_ORDERS_WITHOUT_INVOICES',
+            'active' => 1,
+            'value' => '0',
+            'type' => 'boolean',
+            'position' => 584,
+        ],
     ];
 
 }

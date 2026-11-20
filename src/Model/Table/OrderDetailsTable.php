@@ -5,6 +5,7 @@ namespace App\Model\Table;
 
 use stdClass;
 use Cake\I18n\Date;
+use Cake\I18n\DateTime;
 use Cake\Core\Configure;
 use Cake\Routing\Router;
 use App\Model\Entity\Cart;
@@ -894,6 +895,26 @@ class OrderDetailsTable extends AppTable
             $orderDetail->id_invoice = null;
             $this->save($orderDetail);
         }
+    }
+
+    /**
+     * Marks all open order details with a pickup day BEFORE $beforeDay (Y-m-d) as billed - for every customer, without
+     * creating an invoice (no pdf, no invoice number, no e-mail, no cash register call). Used by the cronjob when
+     * FCS_BILL_ORDERS_WITHOUT_INVOICES is on. Lines of $beforeDay itself stay editable (prices and amounts are
+     * corrected on the pickup day). Returns the number of changed order details.
+     */
+    public function markPastOrderDetailsAsBilled(string $beforeDay): int
+    {
+        return $this->updateAll(
+            [
+                'order_state' => Configure::read('app.htmlHelper')->getOrderStateBilled(),
+                'modified' => DateTime::now(),
+            ],
+            [
+                'order_state IN' => [OrderDetail::STATE_OPEN, OrderDetail::STATE_ORDER_LIST_SENT_TO_MANUFACTURER],
+                'pickup_day <' => $beforeDay,
+            ],
+        );
     }
 
     public function updateOrderDetails(stdClass|Customer $data, int|string $invoiceId): void

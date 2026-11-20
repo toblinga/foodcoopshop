@@ -5526,3 +5526,15 @@ msgstr "Member: contact data exported"
 
 msgid "{0}_contacts_exported_via_API_({1})."
 msgstr "{0} contacts exported via API ({1})."
+
+msgid "Configuration_text_FCS_BILL_ORDERS_WITHOUT_INVOICES"
+msgstr "Cronjob only bills orders - without invoice, pdf and e-mail?"
+
+msgid "Configuration_subtext_FCS_BILL_ORDERS_WITHOUT_INVOICES"
+msgstr "The cronjob \"send invoices to customers\" then does not create invoices but marks all orders up to the day before as billed. No pdfs are generated, no e-mails are sent and no invoice numbers are assigned (useful if invoices are created in another system, e.g. a cash register)."
+
+msgid "Action_Log_Orders_billed_without_invoices"
+msgstr "Orders: billed without invoices"
+
+msgid "{0,plural,=1{1_order_item_was} other{#_order_items_were}}_marked_as_billed_without_invoices."
+msgstr "{0,plural,=1{1 order item was} other{# order items were}} marked as billed without invoices."

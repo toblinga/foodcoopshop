@@ -5843,3 +5843,15 @@ msgstr "Mitglied: Kontaktdaten exportiert"
 
 msgid "{0}_contacts_exported_via_API_({1})."
 msgstr "{0} Kontakte über die API exportiert ({1})."
+
+msgid "Configuration_text_FCS_BILL_ORDERS_WITHOUT_INVOICES"
+msgstr "Bestellungen im Cronjob nur abrechnen – ohne Rechnung, PDF und E-Mail?"
+
+msgid "Configuration_subtext_FCS_BILL_ORDERS_WITHOUT_INVOICES"
+msgstr "Der Cronjob „Rechnungen an Kunden“ erstellt dann keine Rechnungen, sondern markiert alle Bestellungen bis zum Vortag als abgerechnet. Es werden keine PDFs erzeugt, keine E-Mails verschickt und keine Rechnungsnummern vergeben (sinnvoll, wenn die Rechnung in einem anderen System, z. B. der Registrierkasse, erstellt wird)."
+
+msgid "Action_Log_Orders_billed_without_invoices"
+msgstr "Bestellungen: ohne Rechnung abgerechnet"
+
+msgid "{0,plural,=1{1_order_item_was} other{#_order_items_were}}_marked_as_billed_without_invoices."
+msgstr "{0,plural,=1{1 Bestellposition wurde} other{# Bestellpositionen wurden}} ohne Rechnung als abgerechnet markiert."
