@@ -100,6 +100,7 @@ class OrdersController extends ApiAppController
             ];
         }
 
+        /** @var \App\Model\Entity\Customer|null $orderCustomer */
         $orderCustomer = $this->getTableLocator()->get('Customers')->find('all',
             conditions: ['Customers.id_customer' => (int) ($body['customer_id'] ?? 0), 'Customers.active' => 1],
             contain: ['AddressCustomers'],
