@@ -8,6 +8,12 @@ Das Format basiert auf [keepachangelog.com](http://keepachangelog.com) und verwe
 
 ## unreleased (Fork)
 
+- Neue REST-API unter `/api/v1` (Plugin „Api“): Produkte inkl. Varianten, Hersteller und Mitglieder lesen und ändern, Bestellungen lesen, Sofort-Bestellungen für ein Mitglied direkt für einen Abholtag anlegen und Abholtage verschieben. Anmeldung mit Bearer-Token, jede Änderung steht im Aktionsprotokoll. Beschreibung: [FORK.md](FORK.md).
+- Neue Rechte pro Benutzer (zusätzlich zur Gruppe) und API-Tokens. Verwaltung unter „Homepage-Verwaltung → API und Rechte“: Tokens laufen standardmäßig nach 12 Monaten ab („Kein Ablaufdatum“ ist möglich), pro App ein eigener Token, Anlegen und Widerrufen stehen im Aktionsprotokoll.
+- Adressbuch für das Handy: Kontaktdaten der Mitglieder als JSON, vCard und schreibgeschütztes CardDAV. Neue Einstellungen legen fest, welche Mitglieder enthalten sind (nur mit Einwilligung, alle außer Widerspruch, alle aktiven) und ob nur Mitglieder mit einer Bestellung in den letzten Monaten angezeigt werden.
+- Neue Einstellung „Bestellungen im Cronjob nur abrechnen – ohne Rechnung, PDF und E-Mail?“: Der Cronjob „Rechnungen an Kunden“ markiert dann alle Bestellungen bis zum Vortag nur als abgerechnet (sinnvoll, wenn die Rechnung in einem anderen System erstellt wird).
+- Härtung: keine CORS-Header an der API, Rechteprüfung für jede API-Route per Test abgesichert, ungültige Datumsangaben ergeben Fehler 422 statt 500, Upload-Härtung aus dem Original übernommen.
+- Die Migrationen wählen die Kollation je nach Datenbank, damit das Update von 3.5 auf 4.3 auch auf MariaDB 10.11 funktioniert.
 - Neue Einstellung „Abholtag-Ausnahmen“: Einzelne Abholtage (z.B. Weihnachten oder Neujahr) können auf einen früheren Tag verschoben werden, inklusive eigenem Bestellschluss. Die Bestelllisten werden automatisch am Tag nach dem Bestellschluss versendet, alle anderen Abholtage bleiben unverändert. Im Produktkatalog und im Warenkorb wird der verschobene Abholtag angezeigt. Sammelbestellungen werden nicht verschoben, können aber auf den neuen Abholtag gelegt werden. [I#1289](https://github.com/foodcoopshop/foodcoopshop/issues/1289) / [PR#1290](https://github.com/foodcoopshop/foodcoopshop/pull/1290) <a href="https://github.com/mrothauer"><img src="https://github.com/mrothauer.png" width="20"></a>
 
 ## v4.3

@@ -2,6 +2,9 @@
   <a href="https://www.foodcoopshop.com"><img src="https://raw.githubusercontent.com/foodcoopshop/foodcoopshop/develop/webroot/files/images/logo.png" alt="FoodCoopShop"></a>
 </h1>
 
+> **Fork "lieblingsspeis":** This fork adds a REST API (`/api/v1`), a read-only CardDAV address book, billing without invoices and more.
+> See [FORK.md](FORK.md) for the description and the manual of the new features (branch `lieblingsspeis`).
+
 <h4 align="center">User-friendly open source software for <a href="https://www.foodcoopshop.com">food-coops</a> and <a href="https://dorfladen-online.at">local shops</a>.</h4>
 
 <p align="center">
