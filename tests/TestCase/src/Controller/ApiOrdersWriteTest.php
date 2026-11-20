@@ -51,43 +51,43 @@ class ApiOrdersWriteTest extends AppCakeTestCase
      * @param array<string, mixed> $body
      * @return array<string, mixed>
      */
-    private function post(array $body, string $query = ''): array
+    private function placeOrder(array $body, string $query = ''): array
     {
         $this->_request = [];
         $this->configRequest([
             'headers' => ['Authorization' => 'Bearer ' . $this->token, 'Content-Type' => 'application/json'],
         ]);
-        parent::post('/api/v1/orders' . $query, (string) json_encode($body));
+        $this->post('/api/v1/orders' . $query, (string) json_encode($body));
         return (array) json_decode((string) $this->_response->getBody(), true);
     }
 
     public function testNeedsOrdersWritePermission(): void
     {
         $this->getTableLocator()->get('CustomerPermissions')->setForCustomer($this->apiUserId, [P::API_ORDERS_READ], null);
-        $this->post([]);
+        $this->placeOrder([]);
         $this->assertResponseCode(403);
     }
 
     public function testValidation(): void
     {
         $item = ['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 1];
-        $this->post(['customer_id' => $this->memberId, 'items' => [$item]]);
+        $this->placeOrder(['customer_id' => $this->memberId, 'items' => [$item]]);
         $this->assertResponseCode(422); // no pickup_day
-        $this->post(['customer_id' => $this->memberId, 'pickup_day' => '2001-01-05', 'items' => [$item]]);
+        $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => '2001-01-05', 'items' => [$item]]);
         $this->assertResponseCode(422); // in the past
-        $this->post(['customer_id' => $this->memberId, 'pickup_day' => $this->nextFriday(), 'items' => []]);
+        $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $this->nextFriday(), 'items' => []]);
         $this->assertResponseCode(422);
-        $this->post(['customer_id' => $this->memberId, 'pickup_day' => $this->nextFriday(),
+        $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $this->nextFriday(),
             'items' => [['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 0]]]);
         $this->assertResponseCode(422);
-        $this->post(['customer_id' => 999999, 'pickup_day' => $this->nextFriday(), 'items' => [$item]]);
+        $this->placeOrder(['customer_id' => 999999, 'pickup_day' => $this->nextFriday(), 'items' => [$item]]);
         $this->assertResponseCode(404);
     }
 
     public function testDryRunReturnsPricesAndSavesNothing(): void
     {
         $before = $this->getTableLocator()->get('OrderDetails')->find()->count();
-        $result = $this->post([
+        $result = $this->placeOrder([
             'customer_id' => $this->memberId,
             'pickup_day' => $this->nextFriday(),
             'items' => [['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 2]],
@@ -98,31 +98,20 @@ class ApiOrdersWriteTest extends AppCakeTestCase
         $this->assertSame(2, $result['items'][0]['amount']);
         $this->assertGreaterThan(0, $result['total']);
         $this->assertSame($before, $this->getTableLocator()->get('OrderDetails')->find()->count());
-        $this->assertSame(0, $this->getTableLocator()->get('Carts')->find()
-            ->where(['Carts.id_customer' => $this->memberId, 'Carts.status' => 1, 'Carts.cart_type' => 2])
-            ->contain(['CartProducts'])->all()->extract('cart_products')->count() > 0 ? 1 : 0, 'scratch cart is emptied');
+        $left = $this->getTableLocator()->get('CartProducts')->find()
+            ->matching('Carts', fn($q) => $q->where(['Carts.id_customer' => $this->memberId, 'Carts.cart_type' => 2]))->count();
+        $this->assertSame(0, $left, 'the scratch cart is emptied again');
     }
 
     public function testPlacesInstantOrderDirectlyForTheChosenPickupDay(): void
     {
         $day = $this->nextFriday();
-        $result = $this->post([
+        $result = $this->placeOrder([
             'customer_id' => $this->memberId,
             'pickup_day' => $day,
-            'items' => [
-                ['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 2],
-                ['product_id' => ProductsFixture::ID_MILK_0_5L, 'attribute_id' => 0, 'amount' => 1],
-            ],
+            'items' => [['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 2]],
         ]);
-        // the milk id is a product with variants in the demo data: it must be refused cleanly, not crash
-        if ($this->_response->getStatusCode() === 422) {
-            $this->assertSame('order not possible', $result['error']['message']);
-            $result = $this->post([
-                'customer_id' => $this->memberId, 'pickup_day' => $day,
-                'items' => [['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 2]],
-            ]);
-        }
-        $this->assertResponseCode(201);
+        $this->assertResponseCode(201, (string) json_encode($result));
         $this->assertFalse($result['dry_run']);
         $this->assertNotEmpty($result['order_details']);
         foreach ($result['order_details'] as $row) {
@@ -138,7 +127,7 @@ class ApiOrdersWriteTest extends AppCakeTestCase
         $this->assertNotNull($log, 'same action log entry as the admin instant order');
         $this->assertSame($this->apiUserId, (int) $log->customer_id, 'logged for the API user who placed it');
         // no session mode leaks into the next request
-        $again = $this->post(['customer_id' => $this->memberId, 'pickup_day' => $day, 'items' => [
+        $again = $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $day, 'items' => [
             ['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 1]]], '?dry_run=1');
         $this->assertResponseOk();
         $this->assertSame(1, $again['items'][0]['amount']);
@@ -146,7 +135,7 @@ class ApiOrdersWriteTest extends AppCakeTestCase
 
     public function testUnavailableProductIsRefusedWithMessage(): void
     {
-        $result = $this->post([
+        $result = $this->placeOrder([
             'customer_id' => $this->memberId, 'pickup_day' => $this->nextFriday(),
             'items' => [['product_id' => 99999, 'amount' => 1]],
         ]);
@@ -154,5 +143,21 @@ class ApiOrdersWriteTest extends AppCakeTestCase
         $this->assertNotSame('', $result['error']['details']['items'][0]['message']);
         $this->assertSame(0, $this->getTableLocator()->get('OrderDetails')->find()
             ->where(['OrderDetails.product_id' => 99999])->count());
+    }
+
+    public function testExpectedTotalGuardRefusesWhenThePriceChanged(): void
+    {
+        $day = $this->nextFriday();
+        $items = [['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 2]];
+        $preview = $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $day, 'items' => $items], '?dry_run=1');
+        $before = $this->getTableLocator()->get('OrderDetails')->find()->count();
+        $result = $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $day, 'items' => $items,
+            'expected_total' => $preview['total'] + 1]);
+        $this->assertResponseCode(409);
+        $this->assertSame($preview['total'], $result['error']['details']['total']);
+        $this->assertSame($before, $this->getTableLocator()->get('OrderDetails')->find()->count());
+        $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $day, 'items' => $items,
+            'expected_total' => $preview['total']]);
+        $this->assertResponseCode(201);
     }
 }

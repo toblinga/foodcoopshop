@@ -15,7 +15,6 @@ namespace Api\Controller;
 
 use App\Model\Table\CustomerPermissionsTable as P;
 use App\Services\CartService;
-use Authentication\Identity;
 use Cake\Core\Configure;
 use Cake\Http\Response;
 use Cake\I18n\Date;
@@ -114,10 +113,15 @@ class OrdersController extends ApiAppController
         $session->write('OriginalIdentity', $this->customer);
         $session->write('OrderIdentity', $orderCustomer);
         Configure::write('app.apiInstantOrderPickupDay', $pickupDay->format('Y-m-d'));
-        $identity = new Identity($orderCustomer);
-        $orderRequest = $request->withAttribute('identity', $identity);
+        $identity = $orderCustomer; // the Customer entity is the app's identity object
+        // the admin ticks the two checkboxes of the checkout form on behalf of the member - so does the API
+        $orderRequest = $request->withAttribute('identity', $identity)->withParsedBody([
+            'cancellation_terms_accepted' => 1,
+            'general_terms_and_conditions_accepted' => 1,
+        ]);
         $this->setRequest($orderRequest);
         Router::setRequest($orderRequest);
+        $identity->setCart($identity->getCart()); // like the app does for every logged in customer
 
         $cartService = new CartService($this);
         $cartFilled = false;
@@ -139,6 +143,14 @@ class OrdersController extends ApiAppController
             $cart = $identity->getCart();
             $cartProductIds = array_map(fn($p) => (int) $p['cartProductId'], $cart['CartProducts']);
             $summary = $this->summary($cart, $orderCustomer, $pickupDay);
+
+            // optional guard: the caller confirmed this total (e.g. after a preview) - refuse if prices changed meanwhile
+            if (!$dryRun && isset($body['expected_total']) && is_numeric($body['expected_total'])
+                && abs((float) $body['expected_total'] - $summary['total']) > 0.005) {
+                return $this->error(409, 'the total changed since the preview', [
+                    'expected_total' => (float) $body['expected_total'], 'total' => $summary['total'],
+                ]);
+            }
 
             if ($dryRun) {
                 return $this->json(['dry_run' => true] + $summary);
