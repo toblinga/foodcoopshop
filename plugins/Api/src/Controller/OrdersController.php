@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Api\Controller;
 
+use App\Mailer\AppMailer;
+use App\Model\Entity\OrderDetail;
 use App\Model\Table\CustomerPermissionsTable as P;
 use App\Services\CartService;
 use Cake\Core\Configure;
@@ -239,6 +241,146 @@ class OrdersController extends ApiAppController
     private function plain(string $html): string
     {
         return trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    /**
+     * PATCH /api/v1/orders – move the open order of a member from one pickup day to another.
+     *
+     * Body: {"customer_id": 12, "from_pickup_day": "2026-11-20", "pickup_day": "2026-11-27", "send_email": true,
+     * "reason": "...", "order_detail_ids": [..]}. All not yet billed order details of that member on the old day are
+     * moved (the optional ids pin exactly the previewed rows: if the rows changed meanwhile the call is refused with 409).
+     * `?dry_run=1` only returns what would be moved. Same effects as "change pickup day" in the admin order list:
+     * validation, e-mail to the member (default on), action log "order_detail_pickup_day_changed".
+     */
+    public function move(): Response
+    {
+        if ($r = $this->requirePermission(P::API_ORDERS_WRITE)) {
+            return $r;
+        }
+        $body = $this->body();
+        $dryRun = !empty($this->getRequest()->getQuery('dry_run'));
+        $from = $this->parseDay((string) ($body['from_pickup_day'] ?? ''));
+        $to = $this->parseDay((string) ($body['pickup_day'] ?? ''));
+        $customerId = (int) ($body['customer_id'] ?? 0);
+        if ($customerId < 1 || $from === null || $to === null) {
+            return $this->error(422, 'customer_id, from_pickup_day and pickup_day (YYYY-MM-DD) are required');
+        }
+        $today = new Date();
+        if ($to->format('Y-m-d') < $today->format('Y-m-d')) {
+            return $this->error(422, 'pickup_day must not be in the past');
+        }
+        if ($to->format('Y-m-d') > $today->modify('+' . self::MAX_DAYS_AHEAD . ' days')->format('Y-m-d')) {
+            return $this->error(422, 'pickup_day is too far in the future');
+        }
+        if ($to->format('Y-m-d') === $from->format('Y-m-d')) {
+            return $this->error(422, 'pickup_day is the same as from_pickup_day');
+        }
+
+        $orderDetailsTable = $this->getTableLocator()->get('OrderDetails');
+        $rows = $orderDetailsTable->find('all',
+            conditions: [
+                'OrderDetails.id_customer' => $customerId,
+                'OrderDetails.pickup_day' => $from->format('Y-m-d'),
+                'OrderDetails.order_state IN' => [OrderDetail::STATE_OPEN, OrderDetail::STATE_ORDER_LIST_SENT_TO_MANUFACTURER],
+            ],
+            contain: ['Customers', 'Products.Manufacturers', 'OrderDetailUnits'],
+        )->orderBy(['OrderDetails.id_order_detail' => 'ASC'])->all()->toList();
+        if (!$rows) {
+            return $this->error(404, 'no open order of this customer on that pickup day');
+        }
+        if (isset($body['order_detail_ids']) && is_array($body['order_detail_ids'])) {
+            $given = array_map('intval', $body['order_detail_ids']);
+            $found = array_map(fn($od) => (int) $od->id_order_detail, $rows);
+            sort($given);
+            sort($found);
+            if ($given !== $found) {
+                return $this->error(409, 'the order changed since the preview', ['order_detail_ids' => $found]);
+            }
+        }
+
+        $first = $orderDetailsTable->patchEntity($rows[0], ['pickup_day' => $to->format('Y-m-d')], ['validate' => 'pickupDay']);
+        if ($first->hasErrors()) {
+            return $this->error(422, 'pickup day not valid', ['items' => array_map(
+                fn($m) => ['message' => $m], $orderDetailsTable->getAllValidationErrors($first))]);
+        }
+
+        $customer = $rows[0]->customer;
+        $send = !array_key_exists('send_email', $body) || !empty($body['send_email']);
+        $summary = [
+            'customer' => ['id' => (int) $customer->id_customer, 'name' => trim((string) $customer->name)],
+            'from_pickup_day' => $from->format('Y-m-d'),
+            'pickup_day' => $to->format('Y-m-d'),
+            'send_email' => $send,
+            'order_details' => array_map(fn($od) => $this->orderDetailRow($od, $from->format('Y-m-d')), $rows),
+        ];
+        $summary['total_price_tax_incl'] = round(array_sum(array_column($summary['order_details'], 'total_price_tax_incl')), 2);
+        $summary['total_deposit'] = round(array_sum(array_column($summary['order_details'], 'deposit')), 2);
+        $summary['total'] = round($summary['total_price_tax_incl'] + $summary['total_deposit'], 2);
+        if ($dryRun) {
+            return $this->json(['dry_run' => true] + $summary);
+        }
+
+        $timeHelper = Configure::read('app.timeHelper');
+        $oldDay = $timeHelper->getDateFormattedWithWeekday(strtotime($from->format('Y-m-d')));
+        $newDay = $timeHelper->getDateFormattedWithWeekday(strtotime($to->format('Y-m-d')));
+        $reason = htmlspecialchars_decode(strip_tags(trim((string) ($body['reason'] ?? '')), '<strong><b>'));
+        $ids = [];
+        foreach ($rows as $od) {
+            $entity = $orderDetailsTable->patchEntity($od, ['pickup_day' => $to->format('Y-m-d')]);
+            $orderDetailsTable->save($entity);
+            $ids[] = (int) $od->id_order_detail;
+        }
+        $summary['order_details'] = array_map(fn($od) => $this->orderDetailRow($od, $to->format('Y-m-d')), $rows);
+
+        if ($send) {
+            $email = new AppMailer();
+            $email->viewBuilder()->setTemplate('Admin.order_detail_pickup_day_changed');
+            $email->setTo($customer->email)
+                ->setSubject(__('The_pickup_day_of_your_order_was_changed_to') . ': ' . $newDay)
+                ->setViewVars([
+                    'orderDetails' => $rows,
+                    'customer' => $customer,
+                    'newsletterCustomer' => $customer,
+                    'identity' => $this->customer,
+                    'oldPickupDay' => $oldDay,
+                    'newPickupDay' => $newDay,
+                    'editPickupDayReason' => $reason,
+                ]);
+            $email->addToQueue();
+        }
+
+        $message = __('The_pickup_day_of_{0,plural,=1{1_product} other{#_products}}_was_changed_successfully_to_{1}.', [
+            count($ids), '<b>' . $newDay . '</b>',
+        ]);
+        if ($reason !== '') {
+            $message .= ' ' . __('Reason') . ': <b>"' . $reason . '"</b>';
+        }
+        $this->getTableLocator()->get('ActionLogs')->customSave(
+            'order_detail_pickup_day_changed', (int) $this->customer->id_customer, 0, 'order_details',
+            $message . ' Ids: ' . join(', ', $ids));
+
+        return $this->json(['dry_run' => false, 'moved' => count($ids)] + $summary);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function orderDetailRow(\App\Model\Entity\OrderDetail $od, string $day): array
+    {
+        $unit = $od->order_detail_unit ?? null;
+        return [
+            'id' => (int) $od->id_order_detail,
+            'product_id' => (int) $od->product_id,
+            'attribute_id' => $od->product_attribute_id ? (int) $od->product_attribute_id : null,
+            'product_name' => (string) $od->product_name,
+            'amount' => (int) $od->product_amount,
+            'quantity_in_units' => $unit && $unit->product_quantity_in_units !== null ? (float) $unit->product_quantity_in_units : null,
+            'unit' => $unit ? (string) $unit->unit_name : null,
+            'pickup_day' => $day,
+            'state' => (int) $od->order_state,
+            'total_price_tax_incl' => (float) $od->total_price_tax_incl,
+            'deposit' => (float) $od->deposit,
+        ];
     }
 
     public function index(): Response

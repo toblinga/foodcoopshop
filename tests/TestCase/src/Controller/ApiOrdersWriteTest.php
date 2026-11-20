@@ -165,4 +165,97 @@ class ApiOrdersWriteTest extends AppCakeTestCase
             'expected_total' => $preview['total']]);
         $this->assertResponseCode(201);
     }
+
+    /**
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
+    private function moveOrder(array $body, string $query = ''): array
+    {
+        $this->_request = [];
+        $this->configRequest([
+            'headers' => ['Authorization' => 'Bearer ' . $this->token, 'Content-Type' => 'application/json'],
+        ]);
+        $this->patch('/api/v1/orders' . $query, (string) json_encode($body));
+        return (array) json_decode((string) $this->_response->getBody(), true);
+    }
+
+    private function placeFridayOrder(): string
+    {
+        $day = $this->nextFriday();
+        $this->placeOrder(['customer_id' => $this->memberId, 'pickup_day' => $day,
+            'items' => [['product_id' => ProductsFixture::ID_ARTICHOKE, 'amount' => 2]]]);
+        $this->assertResponseCode(201);
+        return $day;
+    }
+
+    private function dayAfter(string $day): string
+    {
+        return (new Date($day))->modify('+7 days')->format('Y-m-d');
+    }
+
+    public function testMoveNeedsPermissionAndValidInput(): void
+    {
+        $day = $this->placeFridayOrder();
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day]);
+        $this->assertResponseCode(422);
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => '2001-01-05']);
+        $this->assertResponseCode(422);
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $day]);
+        $this->assertResponseCode(422);
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $this->dayAfter($day), 'pickup_day' => $this->dayAfter($this->dayAfter($day))]);
+        $this->assertResponseCode(404); // nothing ordered for that day
+        $this->getTableLocator()->get('CustomerPermissions')->setForCustomer($this->apiUserId, [P::API_ORDERS_READ], null);
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $this->dayAfter($day)]);
+        $this->assertResponseCode(403);
+    }
+
+    public function testMovesTheOrderToTheFollowingFridayWithPreviewAndLog(): void
+    {
+        $day = $this->placeFridayOrder();
+        $to = $this->dayAfter($day);
+        $orderDetails = $this->getTableLocator()->get('OrderDetails');
+        $preview = $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $to], '?dry_run=1');
+        $this->assertResponseOk();
+        $this->assertTrue($preview['dry_run']);
+        $this->assertNotEmpty($preview['order_details']);
+        $ids = array_column($preview['order_details'], 'id');
+        $this->assertSame($day, $orderDetails->get($ids[0])->pickup_day->format('Y-m-d'), 'dry run changes nothing');
+
+        // a stale preview is refused
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $to,
+            'order_detail_ids' => [$ids[0] + 1000]]);
+        $this->assertResponseCode(409);
+
+        $result = $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $to,
+            'order_detail_ids' => $ids, 'reason' => 'Vom Chat verschoben']);
+        $this->assertResponseOk();
+        $this->assertSame(count($ids), $result['moved']);
+        foreach ($result['order_details'] as $row) {
+            $this->assertSame($to, $row['pickup_day']);
+        }
+        foreach ($ids as $id) {
+            $this->assertSame($to, $orderDetails->get($id)->pickup_day->format('Y-m-d'));
+        }
+        $log = $this->getTableLocator()->get('ActionLogs')->find()->where(['type' => 'order_detail_pickup_day_changed'])->first();
+        $this->assertNotNull($log, 'same action log as the admin');
+        $this->assertSame($this->apiUserId, (int) $log->customer_id);
+        $this->assertStringContainsString('Vom Chat verschoben', $log->text);
+        // nothing left on the old day
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $to]);
+        $this->assertResponseCode(404);
+    }
+
+    public function testBilledOrdersAreNotMoved(): void
+    {
+        $day = $this->placeFridayOrder();
+        $orderDetails = $this->getTableLocator()->get('OrderDetails');
+        foreach ($orderDetails->find()->where(['pickup_day' => $day, 'id_customer' => $this->memberId])->all() as $od) {
+            $od->order_state = \App\Model\Entity\OrderDetail::STATE_BILLED_CASH;
+            $orderDetails->save($od);
+        }
+        $this->moveOrder(['customer_id' => $this->memberId, 'from_pickup_day' => $day, 'pickup_day' => $this->dayAfter($day)]);
+        $this->assertResponseCode(404);
+    }
 }
+
