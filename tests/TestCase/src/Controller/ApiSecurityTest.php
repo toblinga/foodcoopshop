@@ -145,18 +145,20 @@ class ApiSecurityTest extends AppCakeTestCase
         $this->loginAsSuperadmin();
         $customerId = Configure::read('test.customerId');
         $tokens = $this->getTableLocator()->get('ApiTokens');
-        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => 'LS-Zentrale', 'expires' => '']);
+        $name = 'Chat-' . bin2hex(random_bytes(4)); // tokens are not reset between tests: use a unique name
+        $this->post('/admin/api-access/create-token', ['customer_id' => $customerId, 'name' => $name, 'expires' => '']);
 
         $logs = $this->getTableLocator()->get('ActionLogs');
-        $created = $logs->find()->where(['type' => 'api_token_created'])->firstOrFail();
-        $this->assertStringContainsString('LS-Zentrale', $created->text);
+        $created = $logs->find()->where(['type' => 'api_token_created'])->orderBy(['id' => 'DESC'])->firstOrFail();
+        $this->assertStringContainsString($name, $created->text);
         $this->assertStringNotContainsString('fcs_', $created->text, 'the token itself is never logged');
         $this->assertStringContainsString((string) $customerId, $created->text);
 
-        $this->post('/admin/api-access/revoke-token', ['token_id' => $tokens->find()->where(['name' => 'LS-Zentrale'])->firstOrFail()->id]);
-        $revoked = $logs->find()->where(['type' => 'api_token_revoked'])->firstOrFail();
-        $this->assertStringContainsString('LS-Zentrale', $revoked->text);
-        $this->assertFalse((bool) $tokens->find()->where(['name' => 'LS-Zentrale'])->firstOrFail()->active);
+        $tokenId = $tokens->find()->where(['name' => $name])->firstOrFail()->id;
+        $this->post('/admin/api-access/revoke-token', ['token_id' => $tokenId]);
+        $revoked = $logs->find()->where(['type' => 'api_token_revoked'])->orderBy(['id' => 'DESC'])->firstOrFail();
+        $this->assertStringContainsString($name, $revoked->text);
+        $this->assertFalse((bool) $tokens->get($tokenId)->active);
     }
 
     public function testMeShowsWhenTheTokenExpires(): void

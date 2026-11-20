@@ -5598,3 +5598,24 @@ msgstr "Price per unit"
 
 msgid "Show_product_in_admin"
 msgstr "Show product in product administration"
+
+msgid "Configuration_text_FCS_CONTACTS_MODE"
+msgstr "Address book (contacts API / CardDAV): which members are shown?"
+
+msgid "Configuration_subtext_FCS_CONTACTS_MODE"
+msgstr "Only for users with the permission \"contacts.read\" (e.g. phone address book). Every call is logged. Only active members are shown (active account, no API users)."
+
+msgid "Contacts_mode_consent"
+msgstr "Only members that agreed (default)"
+
+msgid "Contacts_mode_opt_out"
+msgstr "All active members except those who objected"
+
+msgid "Contacts_mode_all"
+msgstr "All active members"
+
+msgid "Configuration_text_FCS_CONTACTS_ORDERED_WITHIN_MONTHS"
+msgstr "Address book: only members who ordered in the last ... months"
+
+msgid "Configuration_subtext_FCS_CONTACTS_ORDERED_WITHIN_MONTHS"
+msgstr "0 = all active members. Counts every order with a pickup day in this period (also future ones). Combined with the selection above."

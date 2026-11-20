@@ -20,7 +20,7 @@ use Cake\Http\Response;
 /**
  * GET /api/v1/contacts (JSON) and /api/v1/contacts.vcf (vCard 3.0)
  *
- * Contact data of active members (see app.contactsMode: consent / opt_out / all).
+ * Contact data of active members (see the settings FCS_CONTACTS_MODE (consent / opt_out / all) and FCS_CONTACTS_ORDERED_WITHIN_MONTHS).
  * Needs the explicit permission contacts.read; every access is written to the action log.
  * The same data is available as address book via CardDAV (/api/v1/carddav/).
  */

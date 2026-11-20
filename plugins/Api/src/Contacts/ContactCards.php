@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Api\Contacts;
 
 use App\Model\Entity\Customer;
-use Cake\Core\Configure;
+use App\Services\ContactsSettingsService;
+use Cake\I18n\Date;
 use Cake\ORM\Locator\LocatorInterface;
 
 /**
@@ -26,7 +27,7 @@ class ContactCards
     public const DEFAULT_COUNTRY_CODE = '43';
 
     /**
-     * Active members without API users; depending on app.contactsMode (consent / opt_out / all).
+     * Active members without API users; depending on the settings FCS_CONTACTS_MODE and FCS_CONTACTS_ORDERED_WITHIN_MONTHS.
      *
      * @return list<\App\Model\Entity\Customer>
      */
@@ -36,11 +37,18 @@ class ContactCards
             'Customers.active' => APP_ON,
             'Customers.is_api_user' => false,
         ];
-        $mode = Configure::read('app.contactsMode');
-        if ($mode === 'opt_out') {
+        $mode = ContactsSettingsService::getMode();
+        if ($mode === ContactsSettingsService::MODE_OPT_OUT) {
             $conditions['Customers.contacts_opt_out'] = false;
-        } elseif ($mode !== 'all') {
+        } elseif ($mode !== ContactsSettingsService::MODE_ALL) {
             $conditions['Customers.share_contact_data'] = true; // consent (default)
+        }
+        $months = ContactsSettingsService::getOrderedWithinMonths();
+        if ($months > 0) {
+            // only members that ordered (or have a future order) in the last X months
+            $conditions['Customers.id_customer IN'] = $locator->get('OrderDetails')->find()
+                ->select(['id_customer'])
+                ->where(['OrderDetails.pickup_day >=' => Date::now()->subMonths($months)->format('Y-m-d')]);
         }
         return array_values($locator->get('Customers')->find()
             ->contain(['AddressCustomers'])

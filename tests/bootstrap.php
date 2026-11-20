@@ -39,6 +39,9 @@ $markAsMigratedMigrations = [
     '20260530113000_AddHomeHeaderPromo',
     '20260610160000_AddHomeBlocks',
     '20260612120000_AddConfigurationFontsForHomeTexts',
+    // settings that are part of the ConfigurationsFixture (otherwise duplicate keys on a fresh test database)
+    '20261120120000_AddConfigurationBillOrdersWithoutInvoices',
+    '20261120130000_AddConfigurationContacts',
 ];
 foreach($markAsMigratedMigrations as $markAsMigratedMigration) {
     $migrations->markMigrated($markAsMigratedMigration, ['connection' => 'test']);

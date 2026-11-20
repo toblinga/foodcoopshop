@@ -432,6 +432,20 @@ class ConfigurationsFixture extends AppFixture
             'position' => 3630,
         ],
         [
+            'name' => 'FCS_CONTACTS_MODE',
+            'active' => 1,
+            'value' => 'consent',
+            'type' => 'dropdown',
+            'position' => 3640,
+        ],
+        [
+            'name' => 'FCS_CONTACTS_ORDERED_WITHIN_MONTHS',
+            'active' => 1,
+            'value' => '0',
+            'type' => 'number',
+            'position' => 3650,
+        ],
+        [
             'name' => 'FCS_BILL_ORDERS_WITHOUT_INVOICES',
             'active' => 1,
             'value' => '0',

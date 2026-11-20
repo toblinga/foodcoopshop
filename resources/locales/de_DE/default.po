@@ -5915,3 +5915,24 @@ msgstr "Grundpreis"
 
 msgid "Show_product_in_admin"
 msgstr "Produkt in der Produktverwaltung anzeigen"
+
+msgid "Configuration_text_FCS_CONTACTS_MODE"
+msgstr "Adressbuch (Kontakte-API / CardDAV): welche Mitglieder werden angezeigt?"
+
+msgid "Configuration_subtext_FCS_CONTACTS_MODE"
+msgstr "Gilt nur für Benutzer mit dem Recht „contacts.read“ (z. B. Handy-Adressbuch). Jeder Abruf wird protokolliert. Es werden nur aktive Mitglieder angezeigt (aktives Konto, keine API-Benutzer)."
+
+msgid "Contacts_mode_consent"
+msgstr "Nur Mitglieder, die zugestimmt haben (Standard)"
+
+msgid "Contacts_mode_opt_out"
+msgstr "Alle aktiven Mitglieder, außer wer widersprochen hat"
+
+msgid "Contacts_mode_all"
+msgstr "Alle aktiven Mitglieder"
+
+msgid "Configuration_text_FCS_CONTACTS_ORDERED_WITHIN_MONTHS"
+msgstr "Adressbuch: nur Mitglieder, die in den letzten … Monaten bestellt haben"
+
+msgid "Configuration_subtext_FCS_CONTACTS_ORDERED_WITHIN_MONTHS"
+msgstr "0 = alle aktiven Mitglieder. Zählt jede Bestellung mit Abholtag in diesem Zeitraum (auch zukünftige). Wird mit der Auswahl oben kombiniert."

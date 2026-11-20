@@ -55,6 +55,12 @@ class ConfigurationHelper extends Helper
             case 'FCS_NO_DELIVERY_DAYS_GLOBAL':
             case 'FCS_MEMBER_FEE_PRODUCTS':
                 return (new ConfigurationDropdownOptionsService())->getMultipleDropdownOptions($name);
+            case 'FCS_CONTACTS_MODE':
+                return [
+                    'consent' => __('Contacts_mode_consent'),
+                    'opt_out' => __('Contacts_mode_opt_out'),
+                    'all' => __('Contacts_mode_all'),
+                ];
             case 'FCS_CASHLESS_PAYMENT_ADD_TYPE':
                 return $this->getCashlessPaymentAddTypeOptions();
             case 'FCS_FONT_HEADER_PROMO_TITLE':

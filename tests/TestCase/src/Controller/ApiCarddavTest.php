@@ -28,7 +28,7 @@ class ApiCarddavTest extends AppCakeTestCase
         parent::setUp();
         $this->permissions([P::CONTACTS_READ]);
         $this->token = $this->getTableLocator()->get('ApiTokens')->generate(Configure::read('test.adminId'), 'carddav test', null);
-        Configure::write('app.contactsMode', 'consent');
+        $this->changeConfiguration('FCS_CONTACTS_MODE', 'consent');
         $customers = $this->getTableLocator()->get('Customers');
         $customers->updateAll(['share_contact_data' => false], []);
         $customers->updateAll(['share_contact_data' => true], ['id_customer' => Configure::read('test.customerId')]);
@@ -140,7 +140,7 @@ class ApiCarddavTest extends AppCakeTestCase
     {
         $count = fn() => substr_count($this->dav('REPORT', '/api/v1/carddav/contacts/', '<c:addressbook-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:carddav"><d:prop><d:getetag/></d:prop></c:addressbook-query>'), '<d:response>');
         $this->assertSame(1, $count());
-        Configure::write('app.contactsMode', 'all');
+        $this->changeConfiguration('FCS_CONTACTS_MODE', 'all');
         $activeMembers = $this->getTableLocator()->get('Customers')->find()->where(['active' => APP_ON, 'is_api_user' => false])->count();
         $this->assertGreaterThan(1, $activeMembers);
         $this->assertSame($activeMembers, $count());
@@ -148,7 +148,7 @@ class ApiCarddavTest extends AppCakeTestCase
 
     public function testOptOutModeHidesOnlyMembersWhoObjected(): void
     {
-        Configure::write('app.contactsMode', 'opt_out');
+        $this->changeConfiguration('FCS_CONTACTS_MODE', 'opt_out');
         $customers = $this->getTableLocator()->get('Customers');
         $activeMembers = $customers->find()->where(['active' => APP_ON, 'is_api_user' => false])->count();
         $customers->updateAll(['contacts_opt_out' => true], ['id_customer' => Configure::read('test.customerId')]);

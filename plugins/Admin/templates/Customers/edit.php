@@ -189,7 +189,7 @@ if (Configure::read('appDb.FCS_NEWSLETTER_ENABLED')) {
     ]);
 }
 
-$contactsMode = Configure::read('app.contactsMode');
+$contactsMode = \App\Services\ContactsSettingsService::getMode();
 if ($contactsMode === 'opt_out') {
     if ($isOwnProfile) {
         echo $this->Form->control('Customers.contacts_opt_out', [
