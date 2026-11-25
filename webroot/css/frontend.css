@@ -2445,3 +2445,31 @@ div.products-wrapper.kacheln > .pw .c2 > .t-mfr {
         font-size: 22px;
     }
 }
+
+/* ---------- Produkt-Detailseite am Handy: Menge in einer Zeile (Minus, Feld, Plus), Spalte rechts breiter ----------
+   Nur body.products.detail und unter 768 px; Warenkorb-Logik unberuehrt. */
+@media (max-width: 767px) {
+    body.products.detail .pw .c1 {
+        width: 70px !important;
+    }
+    body.products.detail .pw .c2 {
+        width: 130px !important;
+    }
+    body.products.detail .pw .c3 {
+        width: 150px !important;
+    }
+    body.products.detail .ew .amount-wrapper {
+        display: flex !important;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 2px;
+        float: none;
+        width: 100%;
+    }
+    body.products.detail .ew .amount-wrapper a.as-minus {
+        order: -1;
+    }
+    body.products.detail .ew .amount-wrapper input[name="amount"] {
+        width: 46px !important;
+    }
+}
