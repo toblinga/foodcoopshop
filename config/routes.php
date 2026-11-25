@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use App\Routing\Route\PageRoute;
 use Cake\Core\Configure;
 use Cake\Routing\Route\DashedRoute;
 use Cake\Routing\RouteBuilder;
@@ -92,8 +93,9 @@ return function (RouteBuilder $routes) {
         // first folder must not exist physically!
         $routes->connect('/photos/profile-images/customers/{imageSrc}', ['controller' => 'Customers', 'action' => 'profileImage']);
 
-        // Infoseiten unter ihrer Adresse, z. B. /ueber-uns/darum-bio (Auflösung im PagesController)
-        $routes->connect('/*', ['controller' => 'Pages', 'action' => 'detail']);
+        // Infoseiten unter ihrer Adresse, z. B. /ueber-uns/darum-bio (Auflösung im PagesController).
+        // PageRoute matcht nur existierende Seitenadressen, alle anderen Adressen gehen an fallbacks().
+        $routes->connect('/*', ['controller' => 'Pages', 'action' => 'detail'], ['routeClass' => PageRoute::class]);
 
         $routes->fallbacks();
     });

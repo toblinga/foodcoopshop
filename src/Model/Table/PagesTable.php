@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Controller\Component\StringComponent;
+use App\Routing\Route\PageRoute;
+use Cake\Cache\Cache;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
@@ -68,6 +70,16 @@ class PagesTable extends AppTable
     {
         // Unterseiten übernehmen die neue Adresse des Elternteils
         $this->rebuildAllSlugs((int) $entity->id_page);
+        Cache::delete(PageRoute::CACHE_KEY);
+    }
+
+    /**
+     * @param EventInterface<\App\Model\Table\PagesTable> $event
+     * @param ArrayObject<string, mixed> $options
+     */
+    public function afterDelete(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        Cache::delete(PageRoute::CACHE_KEY);
     }
 
     /**
