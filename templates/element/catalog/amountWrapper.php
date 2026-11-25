@@ -36,15 +36,11 @@ use App\Services\ProductQuantityService;
     <?php } ?>
 
     <?php
-        if (Configure::read('app.showOrderedProductsTotalAmountInCatalog') && !is_null($orderedTotalAmount)) {
-            if ($product->next_delivery_day != 'delivery-rhythm-triggered-delivery-break') {
-                $pickupDayString = $this->Time->getDateFormattedWithWeekday(strtotime($product->next_delivery_day));
-                $tooltip = __('{0}_times_ordered_for_pickup_day_{1}.', [
-                    '<b>' . $orderedTotalAmount . '</b>',
-                    '<b>' . $pickupDayString . '</b>',
-                ]);
-                echo '<div title="' . $tooltip . '" class="ordered-products-total-amount">' . $orderedTotalAmount . '</div>';
-            }
+        if ($showOrderedHint ?? true) {
+            echo $this->element('catalog/orderedProductsHint', [
+                'product' => $product,
+                'orderedTotalAmount' => $orderedTotalAmount,
+            ]);
         }
 
         if (!$hideIsStockProductIcon && $product->is_stock_product && $product->manufacturer->stock_management_enabled) {

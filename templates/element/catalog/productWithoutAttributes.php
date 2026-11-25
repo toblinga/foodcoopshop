@@ -19,9 +19,11 @@ use App\Services\OrderCustomerService;
  * @link          https://www.foodcoopshop.com
  */
 
+$isTile = (bool) ($isTile ?? false);
+
 echo '<div class="ew active">';
 if ($showProductPrice) {
-    echo '<div class="line">';
+    echo '<div class="line' . ($isTile ? ' t-price' : '') . '">';
     $tooltip = __('Tax_rate') . ': ' . $this->Number->formatTaxRate($product->tax->rate) . '%';
     if ($identity === null || $identity->shopping_price != Customer::SELLING_PRICE) {
         $sellingPrice = $product->selling_prices['gross_price'];
@@ -47,6 +49,9 @@ if ($showProductPrice) {
     }
     echo '</div>';
     echo '<div class="tax">'. $this->Number->formatAsCurrency($product->calculated_tax) . '</div>';
+    if ($isTile && $pricePerUnitInfoText != '') {
+        echo '<div class="t-grund">' . $pricePerUnitInfoText . '</div>';
+    }
 } else {
     // Cart.js::initAddToCartButton() needs the following elements!
     echo '<div class="price hide">' . $this->Number->formatAsCurrency(0) . '</div>';
@@ -58,6 +63,7 @@ echo $this->element('catalog/hiddenProductIdField', ['productId' => $product->id
 echo $this->element('catalog/amountWrapper', [
     'product' => $product,
     'orderedTotalAmount' => $product->ordered_total_amount ?? null,
+    'showOrderedHint' => !$isTile,
     'stockAvailable' => $product->stock_available,
     'unitObject' => $product->unit_product,
     'hideAmountSelector' => $isStockProductOrderPossible || $isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck,
@@ -74,6 +80,12 @@ echo $this->element('catalog/cartButton', [
     'cartButtonLabel' => OrderCustomerService::isSelfServiceModeByUrl() ? __('Move_in_shopping_bag') : __('Move_in_cart'),
     'cartButtonIcon' => OrderCustomerService::isSelfServiceModeByUrl() ? 'fa-shopping-bag' : 'fa-cart-plus'
 ]);
+if ($isTile) {
+    echo $this->element('catalog/orderedProductsHint', [
+        'product' => $product,
+        'orderedTotalAmount' => $product->ordered_total_amount ?? null,
+    ]);
+}
 echo $this->element('catalog/notAvailableInfo', [
     'product' => $product,
     'stockAvailable' => $product->stock_available,
@@ -83,7 +95,7 @@ echo $this->element('catalog/includeStockProductsInOrdersWithDeliveryRhythmInfoT
     'keyword' => OrderCustomerService::isSelfServiceModeByUrl() ? $product->ProductIdentifier : null
 ]);
 
-if ($showProductPrice) {
+if ($showProductPrice && !$isTile) {
     echo $pricePerUnitInfoText;
 }
 echo $this->element('catalog/quantityInUnitsInputFieldForSelfService', [

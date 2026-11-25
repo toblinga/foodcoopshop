@@ -20,6 +20,8 @@ use App\Services\PickupDayExceptionService;
 use Cake\Core\Configure;
 use App\Services\OrderCustomerService;
 
+$isTile = (bool) ($isTile ?? false);
+
 echo '<div class="heading">';
     echo '<h4>';
     if ($showProductDetailLink) {
@@ -48,6 +50,10 @@ echo '<div class="descriptions">';
         echo '<div class="toggle-content description">'.$product->description.'</div>';
     }
 echo '</div>';
+
+if ($isTile) {
+    echo '<div class="t-pickup">';
+}
 
 if (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
 
@@ -118,6 +124,11 @@ if (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
     }
 }
 
+if ($isTile) {
+    echo '</div>';
+    echo '<div class="t-mfr">';
+}
+
 if (Configure::read('app.showManufacturerListAndDetailPage')) {
     echo '<br />'.__('Manufacturer').': ';
     if ($showManufacturerDetailLink) {
@@ -147,4 +158,8 @@ if (!OrderCustomerService::isOrderForDifferentCustomerMode()) {
                 );
         }
     }
+}
+
+if ($isTile) {
+    echo '</div>';
 }

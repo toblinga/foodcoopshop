@@ -19,6 +19,8 @@ use App\Services\OrderCustomerService;
  * @link          https://www.foodcoopshop.com
  */
 
+$isTile = (bool) ($isTile ?? false);
+
 // 1) kick attributes if not available
 $hasCheckedAttribute = false;
 $i = 0;
@@ -61,7 +63,7 @@ foreach ($preparedProductAttributes as $attribute) {
     }
     echo '<div class="'.join(' ', $entityClasses).'" id="ew-'.$attribute->id_product_attribute.'">';
     if ($showProductPrice) {
-        echo '<div class="line">';
+        echo '<div class="line' . ($isTile ? ' t-price' : '') . '">';
         $tooltip = __('Tax_rate') . ': ' . $this->Number->formatTaxRate($product->tax->rate) . '%';
         if ($identity === null || $identity->shopping_price != Customer::SELLING_PRICE) {
             $sellingPrice = $attribute->selling_prices['gross_price'];
@@ -87,6 +89,9 @@ foreach ($preparedProductAttributes as $attribute) {
         }
 
         echo '<div class="tax">'. $this->Number->formatAsCurrency($attribute->calculated_tax) . '</div>';
+        if ($isTile && $pricePerUnitInfoText != '') {
+            echo '<div class="t-grund">' . $pricePerUnitInfoText . '</div>';
+        }
         echo '</div>';
     } else {
         // Cart.js::initAddToCartButton() needs the following elements!
@@ -99,6 +104,7 @@ foreach ($preparedProductAttributes as $attribute) {
         'stockAvailable' => $attribute->stock_available,
         'unitObject' => $attribute->unit_product_attribute,
         'orderedTotalAmount' => $attribute->ordered_total_amount ?? null,
+        'showOrderedHint' => !$isTile,
         'hideAmountSelector' => $isStockProductOrderPossible || (new ProductQuantityService())->isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck($product, $attribute->unit_product_attribute),
         'hideIsStockProductIcon' => OrderCustomerService::isSelfServiceModeByUrl(),
     ]);
@@ -113,6 +119,12 @@ foreach ($preparedProductAttributes as $attribute) {
         'cartButtonLabel' => OrderCustomerService::isSelfServiceModeByUrl() ? __('Move_in_shopping_bag') : __('Move_in_cart'),
         'cartButtonIcon' => OrderCustomerService::isSelfServiceModeByUrl() ? 'fa-shopping-bag' : 'fa-cart-plus'
     ]);
+    if ($isTile) {
+        echo $this->element('catalog/orderedProductsHint', [
+            'product' => $product,
+            'orderedTotalAmount' => $attribute->ordered_total_amount ?? null,
+        ]);
+    }
     echo $this->element('catalog/notAvailableInfo', [
         'product' => $product,
         'stockAvailable' => $attribute->stock_available
@@ -122,7 +134,7 @@ foreach ($preparedProductAttributes as $attribute) {
         'keyword' => OrderCustomerService::isSelfServiceModeByUrl() ? $product->ProductIdentifier : null
     ]);
 
-    if ($showProductPrice) {
+    if ($showProductPrice && !$isTile) {
         echo $pricePerUnitInfoText;
     }
 

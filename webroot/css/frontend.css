@@ -2108,8 +2108,8 @@ body.has-page-banner #content {
 }
 
 /* ---------- Kachelansicht fuer Produktlisten (Kategorie- und Suchseite) ----------
-   Gleiches Markup wie die Listenansicht (c1/c2/c3), nur anders angeordnet.
-   Standard ist die Liste; die Klasse "kacheln" setzt das Script bzw. das Cookie fcsProductView. */
+   Gleiches Markup wie die Listenansicht; die Kachel ordnet die Teile per CSS-Order neu.
+   Standard ist die Liste; Klasse "kacheln" setzt das Script bzw. das Cookie fcsProductView. */
 .product-view-switch {
     display: inline-block;
     margin-left: 12px;
@@ -2153,10 +2153,17 @@ div.products-wrapper.kacheln > .pw {
     display: flex;
     flex-direction: column;
 }
+/* Spalten aufloesen, damit alle Teile einzeln einsortiert werden koennen */
+div.products-wrapper.kacheln > .pw .c2,
+div.products-wrapper.kacheln > .pw .c3,
+div.products-wrapper.kacheln > .pw .ew.active {
+    display: contents;
+}
 div.products-wrapper.kacheln > .pw div.c1 {
     float: none !important;
     width: 100% !important;
     margin: 0 0 10px 0 !important;
+    order: 10;
 }
 #inner-content div.products-wrapper.kacheln > .pw div.c1 img {
     display: block;
@@ -2168,18 +2175,9 @@ div.products-wrapper.kacheln > .pw div.c1 {
     border-radius: 5px;
     margin: 0 auto;
 }
-div.products-wrapper.kacheln > .pw div.c2 {
-    float: none !important;
-    width: auto !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 0 10px 0 !important;
-    border: 0 !important;
-}
-div.products-wrapper.kacheln > .pw div.c2 .heading {
-    width: 100%;
-}
-div.products-wrapper.kacheln > .pw div.c2 .heading h4 {
+/* Reihenfolge: Bild, Name, Kurztext, Langtext, Preis, Grundpreis/Einheit/Varianten, Menge, Warenkorb, Bestellt-Hinweis, Abholtag, Hersteller */
+div.products-wrapper.kacheln > .pw .c2 > .heading { order: 20; width: 100%; }
+div.products-wrapper.kacheln > .pw .c2 > .heading h4 {
     float: none;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -2190,18 +2188,27 @@ div.products-wrapper.kacheln > .pw div.c2 .heading h4 {
     margin: 0 0 6px 0;
     word-break: break-word;
 }
-div.products-wrapper.kacheln > .pw div.c3 {
-    float: none !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 10px 0 0 0 !important;
-    border: 0 !important;
-    border-top: 1px solid #d6d4d4 !important;
+div.products-wrapper.kacheln > .pw .c2 > .descriptions { order: 30; margin-bottom: 8px; }
+div.products-wrapper.kacheln > .pw .c2 > .t-pickup { order: 100; margin-top: 8px; }
+div.products-wrapper.kacheln > .pw .c2 > .t-mfr { order: 110; margin-top: 8px; }
+div.products-wrapper.kacheln > .pw .c3 > .radio,
+div.products-wrapper.kacheln > .pw .c3 > .unity,
+div.products-wrapper.kacheln > .pw .c3 > p { order: 60; }
+div.products-wrapper.kacheln > .pw .ew.active > * { order: 85; }
+div.products-wrapper.kacheln > .pw .ew.active > .line.t-price { order: 50; }
+div.products-wrapper.kacheln > .pw .ew.active > .t-grund { order: 55; }
+div.products-wrapper.kacheln > .pw .ew.active > .amount-wrapper { order: 70; }
+div.products-wrapper.kacheln > .pw .ew.active > .quantity-in-units-input-field-wrapper { order: 72; }
+div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .btn-cart) { order: 80; }
+div.products-wrapper.kacheln > .pw .ew.active > .ordered-products-total-amount { order: 90; }
+div.products-wrapper.kacheln > .pw .ew.active > .tax { display: none; }
+div.products-wrapper.kacheln > .pw .t-grund {
+    margin: 2px 0 8px 0;
+    font-size: 14px;
+    word-break: break-word;
 }
-div.products-wrapper.kacheln > .pw div.c3 .price {
-    font-size: 1.25em;
-}
-div.products-wrapper.kacheln > .pw .amount-wrapper {
+div.products-wrapper.kacheln > .pw .line {
+    float: none;
     width: 100%;
 }
 div.products-wrapper.kacheln > .pw .btn-cart {
@@ -2209,11 +2216,65 @@ div.products-wrapper.kacheln > .pw .btn-cart {
     width: 100%;
     text-align: center;
 }
+div.products-wrapper.kacheln > .pw .amount-wrapper {
+    width: 100%;
+    margin-bottom: 6px;
+}
+div.products-wrapper.kacheln > .pw .ordered-products-total-amount {
+    margin: 4px 0 6px 0;
+    font-size: 14px;
+}
+div.products-wrapper.kacheln > .pw .t-pickup,
+div.products-wrapper.kacheln > .pw .t-mfr {
+    word-break: break-word;
+}
 @media (max-width: 767px) {
     div.products-wrapper.kacheln {
         grid-template-columns: minmax(0, 1fr);
     }
     #inner-content div.products-wrapper.kacheln > .pw div.c1 img {
         height: 150px !important;
+    }
+    /* Touch-Ziele: mindestens 48 px hoch */
+    div.products-wrapper.kacheln > .pw .btn-cart {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px !important;
+        width: 100% !important;
+        font-size: 17px !important;
+        padding: 10px 12px !important;
+        white-space: normal;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper input[name="amount"] {
+        height: 48px !important;
+        width: 96px !important;
+        font-size: 20px !important;
+        text-align: center;
+        padding: 6px !important;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper a.as {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        min-height: 48px;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper .fas {
+        font-size: 30px !important;
+        margin-top: 0 !important;
+    }
+    div.products-wrapper.kacheln > .pw .c2 > .heading h4 {
+        font-size: 18px !important;
+        height: 50px;
+    }
+    div.products-wrapper.kacheln > .pw .ew.active > .line.t-price .price {
+        font-size: 24px !important;
     }
 }

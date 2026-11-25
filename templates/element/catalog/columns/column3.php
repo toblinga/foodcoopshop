@@ -33,11 +33,13 @@ if (!empty($product->product_attributes)) {
         'product' => $product,
         'showProductPrice' => $showProductPrice,
         'isStockProductOrderPossible' => $isStockProductOrderPossible,
+        'isTile' => $isTile ?? false,
     ]);
 } else {
     echo $this->element('catalog/productWithoutAttributes', [
         'product' => $product,
         'showProductPrice' => $showProductPrice,
         'isStockProductOrderPossible' => $isStockProductOrderPossible,
+        'isTile' => $isTile ?? false,
     ]);
 }

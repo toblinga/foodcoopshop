@@ -15,9 +15,13 @@ declare(strict_types=1);
  * @link          https://www.foodcoopshop.com
  */
 
+$isTile = (bool) ($isTile ?? false);
 $classes = [
     'pw'
 ];
+if ($isTile) {
+    $classes[] = 'pw-tile';
+}
 $deliveryBreakManufacturerEnabled = $product->delivery_break_enabled ?? false;
 if ($deliveryBreakManufacturerEnabled) {
     $classes[] = 'delivery-break-enabled';
@@ -36,12 +40,14 @@ echo '<div class="' . join(' ', $classes) . '" id="pw-' . $product->id_product .
             'product' => $product,
             'showProductDetailLink' => $showProductDetailLink,
             'showManufacturerDetailLink' => $showManufacturerDetailLink,
+            'isTile' => $isTile,
         ]);
     echo '</div>';
 
     echo '<div class="c3">';
         echo $this->element('catalog/columns/column3', [
             'product' => $product,
+            'isTile' => $isTile,
         ]);
     echo '</div>';
 

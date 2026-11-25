@@ -95,11 +95,12 @@ echo '<div class="products-wrapper' . ($isTileView ? ' kacheln' : '') . '">';
             'product' => $product,
             'showProductDetailLink' => true,
             'showManufacturerDetailLink' => true,
-            'showIsNewBadgeAsLink' => true
+            'showIsNewBadgeAsLink' => true,
+            'isTile' => $isTileView,
         ],
         [
             'cache' => [
-                'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request),
+                'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request) . ($isTileView ? '_tile' : ''),
             ],
         ]
         );
