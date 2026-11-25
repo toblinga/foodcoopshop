@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+/**
+ * @extends \App\Model\Table\AppTable<\Cake\Datasource\EntityInterface>
+ */
 class BlogCategoriesTable extends AppTable
 {
     public const TABLE_MAP = 'fcs_blog_post_categories';

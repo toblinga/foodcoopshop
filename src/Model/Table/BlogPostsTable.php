@@ -94,6 +94,9 @@ class BlogPostsTable extends AppTable
     public const TABLE_MAP_MANUFACTURERS = 'fcs_blog_post_manufacturers';
     public const TABLE_MAP_PRODUCTS = 'fcs_blog_post_products';
 
+    /**
+     * @return \Cake\Database\Query\SelectQuery<array<string, mixed>>
+     */
     private function getBlogPostIdsSubquery(string $table, string $column, int $id): \Cake\Database\Query\SelectQuery
     {
         return $this->getConnection()->selectQuery()

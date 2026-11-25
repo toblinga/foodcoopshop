@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Stichwort-Seite: alle Beitraege zu einem Stichwort, neueste zuerst
  */

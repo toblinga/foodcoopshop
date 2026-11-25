@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Kategorie-Seite: alle Beitraege einer Kategorie, neueste zuerst
  */

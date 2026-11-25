@@ -51,11 +51,19 @@ class PagesTable extends AppTable
         ]);
     }
 
+    /**
+     * @param EventInterface<\App\Model\Table\PagesTable> $event
+     * @param ArrayObject<string, mixed> $options
+     */
     public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
     {
         $entity->slug = $this->buildSlug($entity);
     }
 
+    /**
+     * @param EventInterface<\App\Model\Table\PagesTable> $event
+     * @param ArrayObject<string, mixed> $options
+     */
     public function afterSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
     {
         // Unterseiten übernehmen die neue Adresse des Elternteils

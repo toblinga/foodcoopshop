@@ -17,6 +17,9 @@ namespace App\Model\Table;
 
 use App\Controller\Component\StringComponent;
 
+/**
+ * @extends \App\Model\Table\AppTable<\Cake\Datasource\EntityInterface>
+ */
 class BlogTagsTable extends AppTable
 {
     public const TABLE_MAP = 'fcs_blog_post_tags';
