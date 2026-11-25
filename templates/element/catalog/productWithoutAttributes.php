@@ -49,8 +49,9 @@ if ($showProductPrice) {
     }
     echo '</div>';
     echo '<div class="tax">'. $this->Number->formatAsCurrency($product->calculated_tax) . '</div>';
-    if ($isTile && $pricePerUnitInfoText != '') {
-        echo '<div class="t-grund">' . $pricePerUnitInfoText . '</div>';
+    // Kachel: kein Grundpreis mehr; bei Verrechnung nach Gewicht nur der kleine Hinweis
+    if ($isTile && $product->unit_product->price_per_unit_enabled) {
+        echo '<div class="t-weight">nach Gewicht</div>';
     }
 } else {
     // Cart.js::initAddToCartButton() needs the following elements!

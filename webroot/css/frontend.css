@@ -2244,6 +2244,14 @@ div.products-wrapper.kacheln > .pw .c3 > p { order: 60; }
 div.products-wrapper.kacheln > .pw .ew.active > * { order: 85; }
 div.products-wrapper.kacheln > .pw .ew.active > .line.t-price { order: 50; }
 div.products-wrapper.kacheln > .pw .ew.active > .t-grund { order: 55; }
+/* Hinweis "nach Gewicht" direkt unter dem Preis, klein und grau */
+div.products-wrapper.kacheln > .pw .ew.active > .t-weight {
+    order: 52;
+    margin: -2px 0 4px 0;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8a8a8a;
+}
 div.products-wrapper.kacheln > .pw .ew.active > .amount-wrapper { order: 70; }
 div.products-wrapper.kacheln > .pw .ew.active > .quantity-in-units-input-field-wrapper { order: 72; }
 div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .btn-cart) { order: 80; }
