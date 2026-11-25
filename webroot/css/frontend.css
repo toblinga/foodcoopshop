@@ -2223,15 +2223,15 @@ div.products-wrapper.kacheln > .pw .t-pickup-line .pickup-day {
 /* kleiner neutraler Chip, ohne Farb- oder Bildaenderung der Kachel */
 div.products-wrapper.kacheln > .pw .t-next-chip {
     display: inline-block;
-    font-size: 12px;
-    line-height: 16px;
-    padding: 1px 6px;
-    margin: 1px 0;
+    font-size: 11px;
+    line-height: 14px;
+    padding: 0 4px;
+    margin: 0 0 0 2px;
     border: 1px solid rgba(128, 128, 128, 0.5);
-    border-radius: 10px;
+    border-radius: 8px;
     color: inherit;
     opacity: 0.75;
-    vertical-align: middle;
+    vertical-align: 2px;
 }
 /* leere Hinweiszeile (nicht verfuegbar) nicht als Abstand rendern */
 div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .not-available-info:empty) {
