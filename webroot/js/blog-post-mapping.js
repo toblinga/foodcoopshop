@@ -22,6 +22,23 @@ foodcoopshop.BlogPostMapping = {
         return div.innerHTML;
     },
 
+    /**
+     * Text fuer den Chip: nur der Name, ohne Praefix "Produkt: " bzw. "Lieferant: ".
+     * Bei Produkten entfaellt zusaetzlich die Klammer mit dem Lieferanten am Ende,
+     * z. B. "Produkt: Bio Kartoffel-Chips Meersalz (BioArt)" -> "Bio Kartoffel-Chips Meersalz".
+     * Die Dropdown-Auswahl (render.option) zeigt weiterhin Praefix und Klammer.
+     */
+    chipLabel: function (type, text) {
+        var label = String(text || '');
+        if (type !== 'supplier-product') {
+            return label;
+        }
+        if (/^Produkt: /.test(label)) {
+            return label.replace(/^Produkt: /, '').replace(/\s\([^()]*\)$/, '');
+        }
+        return label.replace(/^Lieferant: /, '');
+    },
+
     init: function () {
         var self = this;
         document.querySelectorAll('select.blog-post-mapping').forEach(function (element) {
@@ -41,8 +58,13 @@ foodcoopshop.BlogPostMapping = {
                 placeholder: element.getAttribute('data-placeholder') || '',
                 closeAfterSelect: false,
                 render: {
+                    // Chip: nur Name (ohne Praefix), Text umbricht statt abgeschnitten zu werden
                     item: function (data, escape) {
-                        return '<div class="blog-chip">' + escape(data.text) + '</div>';
+                        return '<div class="blog-chip">' + escape(self.chipLabel(type, data.text)) + '</div>';
+                    },
+                    // Dropdown: vollstaendige Bezeichnung mit Praefix und Lieferant in Klammern
+                    option: function (data, escape) {
+                        return '<div class="option">' + escape(data.text) + '</div>';
                     },
                     no_results: function () {
                         return '<div class="no-results">Keine Treffer</div>';
