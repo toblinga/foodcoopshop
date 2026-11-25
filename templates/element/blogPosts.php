@@ -42,6 +42,7 @@ foreach ($blogPosts as $blogPost) {
     echo '</span>';
     echo '<span class="content">';
         echo '<h3>' . $blogPost->title . '</h3>';
+        echo '<span class="blog-category ' . $blogPost->getCategoryCssClass() . '">' . h($blogPost->getCategoryLabel()) . '</span>';
         if ($blogPost->short_description != '') {
             $contentText = $blogPost->short_description;
         } else {

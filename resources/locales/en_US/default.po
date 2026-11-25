@@ -742,6 +742,12 @@ msgstr "BIC"
 msgid "Blog_archive"
 msgstr "Blog archive"
 
+msgid "Category_general"
+msgstr "General"
+
+msgid "Category_recipe"
+msgstr "Recipe"
+
 msgid "Blog_post_manufacturer_description"
 msgstr "If the manufacturer is only shown for signed in members, this is also the case for the blog post (ignoring the setting for the blog post)."
 

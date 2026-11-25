@@ -39,8 +39,9 @@ if ($blogPost->short_description != '') {
     echo '<p><b>'.$blogPost->short_description.'</b></p>';
 }
 
-    // Rezepte erkennen (Abschnitt "Zutaten" im Text) und nur dort die Rezept-Gestaltung anwenden
-    $isRecipe = str_contains((string) $blogPost->content, 'Zutaten');
+    echo '<p class="blog-category ' . $blogPost->getCategoryCssClass() . '">' . h($blogPost->getCategoryLabel()) . '</p>';
+
+    $isRecipe = $blogPost->isRecipe();
     echo '<div class="content' . ($isRecipe ? ' is-recipe' : '') . '">';
         echo $blogPost->content;
     echo '</div>';

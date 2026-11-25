@@ -730,6 +730,12 @@ msgstr "BIC"
 msgid "Blog_archive"
 msgstr "Архив блога"
 
+msgid "Category_general"
+msgstr "Общее"
+
+msgid "Category_recipe"
+msgstr "Рецепт"
+
 msgid "Blog_post_manufacturer_description"
 msgstr "Если производители видимы только для зарегистрированным покупателям, это так же относится и к блог постам (игнорируются в настройках для блог поста)."
 

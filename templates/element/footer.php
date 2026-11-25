@@ -21,8 +21,11 @@ use Cake\Core\Configure;
 <div class="c1">
     <?php
         $menu = $this->Menu->buildPageMenu($pagesForFooter);
-        if (Configure::read('app.isBlogFeatureEnabled')) {
-            $menu[] = ['name' => __('Blog_archive'), 'slug' => $this->Slug->getBlogList()];
+        // Blog-Archiv nur ergaenzen, wenn kein Footer-Eintrag bereits darauf verweist (sonst doppelter Link)
+        $blogListSlug = $this->Slug->getBlogList();
+        $blogLinkInFooterPages = array_filter($menu, fn($item) => str_ends_with((string) $item['slug'], $blogListSlug));
+        if (Configure::read('app.isBlogFeatureEnabled') && empty($blogLinkInFooterPages)) {
+            $menu[] = ['name' => __('Blog_archive'), 'slug' => $blogListSlug];
         }
         if (Configure::read('app.termsOfUseEnabled')) {
             $menu[] = ['name' => __('Terms_of_use'), 'slug' => $this->Slug->getTermsOfUse()];
