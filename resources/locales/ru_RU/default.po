@@ -5301,3 +5301,6 @@ msgstr "{0} {1} не может быть связан."
 
 msgid "{0}_{1}_was_successfully_associated."
 msgstr "{0} {1} был успешно связан."
+
+msgid "Matching_posts_and_recipes"
+msgstr "Подходящие статьи и рецепты"

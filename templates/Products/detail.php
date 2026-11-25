@@ -63,7 +63,7 @@ if (Configure::read('app.showOrderedProductsTotalAmountInCatalog')) {
 <?php
 if (!empty($productBlogPosts['posts'])) {
     echo '<div class="product-blog-posts">';
-    echo '<h2 class="further-news">' . __('Further_news') . '</h2>';
+    echo '<h2 class="further-news">' . __('Matching_posts_and_recipes') . '</h2>';
     echo '<div class="blog-related-row">';
     echo $this->element('blogPosts', [
         'blogPosts' => $productBlogPosts['posts'],

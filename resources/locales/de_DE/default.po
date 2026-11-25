@@ -6000,3 +6000,6 @@ msgstr "Individueller Bestellschluss"
 msgid "Bulk_orders"
 msgstr "Sammelbestellungen"
 
+
+msgid "Matching_posts_and_recipes"
+msgstr "Passende Beiträge und Rezepte"
