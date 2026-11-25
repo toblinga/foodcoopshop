@@ -79,11 +79,33 @@ class BlogPostsController extends AdminAppController
     private function _processForm(BlogPost $blogPost, bool $isEditMode): ?Response
     {
         $blogPostsTable = $this->getTableLocator()->get('BlogPosts');
+        $productsTable = $this->getTableLocator()->get('Products');
         $this->setFormReferer();
         $this->set('isEditMode', $isEditMode);
 
         $manufacturersTable = $this->getTableLocator()->get('Manufacturers');
         $this->set('manufacturersForDropdown', $manufacturersTable->getForDropdown());
+
+        $productsTable = $this->getTableLocator()->get('Products');
+        $selectedManufacturers = [];
+        $selectedProducts = [];
+        if ($isEditMode && !empty($blogPost->id_blog_post)) {
+            $blogPostsTableForMapping = $this->getTableLocator()->get('BlogPosts');
+            $manufacturerIdsForForm = $blogPostsTableForMapping->getMappedManufacturerIds((int) $blogPost->id_blog_post);
+            $productIdsForForm = $blogPostsTableForMapping->getMappedProductIds((int) $blogPost->id_blog_post);
+            if (!empty($manufacturerIdsForForm)) {
+                $selectedManufacturers = $manufacturersTable->find('list', keyField: 'id_manufacturer', valueField: 'name')
+                    ->where(['id_manufacturer IN' => $manufacturerIdsForForm])
+                    ->all()->toArray();
+            }
+            if (!empty($productIdsForForm)) {
+                $selectedProducts = $productsTable->find('list', keyField: 'id_product', valueField: 'name')
+                    ->where(['id_product IN' => $productIdsForForm])
+                    ->all()->toArray();
+            }
+        }
+        $this->set('selectedManufacturers', $selectedManufacturers);
+        $this->set('selectedProducts', $selectedProducts);
 
         $_SESSION['ELFINDER'] = [
             'uploadUrl' => Configure::read('App.fullBaseUrl') . "/files/kcfinder/blog_posts",
@@ -101,9 +123,19 @@ class BlogPostsController extends AdminAppController
 
         $this->setRequest($this->getRequest()->withData('BlogPosts.id_customer', $this->identity->getId()));
 
+        $manufacturerIds = (array) $this->getRequest()->getData('BlogPosts.manufacturer_ids', []);
+        $productIds = (array) $this->getRequest()->getData('BlogPosts.product_ids', []);
         if ($this->identity->isManufacturer()) {
-            $this->setRequest($this->getRequest()->withData('BlogPosts.id_manufacturer', $this->identity->getManufacturerId()));
+            $ownManufacturerId = (int) $this->identity->getManufacturerId();
+            $manufacturerIds = [$ownManufacturerId];
+            // Hersteller duerfen nur eigene Produkte zuordnen
+            $productIds = $productsTable->find()
+                ->select(['id_product'])
+                ->where(['id_manufacturer' => $ownManufacturerId, 'id_product IN' => array_map('intval', $productIds) ?: [0]])
+                ->all()->extract('id_product')->toList();
         }
+        // Hauptlieferant (fuer Standardbild-Fallback) = erster gewaehlter Lieferant
+        $this->setRequest($this->getRequest()->withData('BlogPosts.id_manufacturer', (int) ($manufacturerIds[0] ?? 0)));
 
         if (!$this->getRequest()->getData('BlogPosts.update_modified_field') && !$this->identity->isManufacturer() && $isEditMode) {
             $blogPostsTable->removeBehavior('Timestamp');
@@ -121,6 +153,9 @@ class BlogPostsController extends AdminAppController
             return $this->render('edit');
         } else {
             $blogPost = $blogPostsTable->save($blogPost);
+            if ($blogPost) {
+                $blogPostsTable->saveMappings((int) $blogPost->id_blog_post, $manufacturerIds, $productIds);
+            }
 
             if (!$isEditMode) {
                 $messageSuffix = __('created');
@@ -154,6 +189,56 @@ class BlogPostsController extends AdminAppController
             return $this->redirect($this->getPreparedReferer());
         }
 
+    }
+
+    /**
+     * JSON-Suche für die Chip-Felder (Lieferanten und Produkte) im Blogbeitrag-Formular
+     */
+    public function searchTargets(): Response
+    {
+        $this->getRequest()->allowMethod(['get']);
+        $type = (string) $this->getRequest()->getQuery('type');
+        $term = trim((string) $this->getRequest()->getQuery('q'));
+        $manufacturerId = (int) $this->getRequest()->getQuery('manufacturer_id');
+        $items = [];
+
+        if ($type === 'manufacturer') {
+            $query = $this->getTableLocator()->get('Manufacturers')->find()
+                ->select(['id_manufacturer', 'name']);
+            if ($this->identity->isManufacturer()) {
+                $query->where(['id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+            }
+            if ($term !== '') {
+                $query->where(['name LIKE' => '%' . $term . '%']);
+            }
+            foreach ($query->orderBy(['name' => 'ASC'])->limit(30)->all() as $manufacturer) {
+                $items[] = ['value' => (int) $manufacturer->id_manufacturer, 'text' => $manufacturer->name];
+            }
+        } elseif ($type === 'product') {
+            $query = $this->getTableLocator()->get('Products')->find()
+                ->select(['Products.id_product', 'Products.name', 'Manufacturers.name'])
+                ->contain(['Manufacturers'])
+                ->where(['Products.active' => APP_ON]);
+            if ($this->identity->isManufacturer()) {
+                $query->where(['Products.id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+            }
+            if ($manufacturerId > 0) {
+                $query->where(['Products.id_manufacturer' => $manufacturerId]);
+            }
+            if ($term !== '') {
+                $query->where(['Products.name LIKE' => '%' . $term . '%']);
+            }
+            $limit = $manufacturerId > 0 && $term === '' ? 1000 : 50;
+            foreach ($query->orderBy(['Products.name' => 'ASC'])->limit($limit)->all() as $product) {
+                $manufacturerName = $product->hasValue('manufacturer') ? $product->manufacturer->name : '';
+                $items[] = [
+                    'value' => (int) $product->id_product,
+                    'text' => $product->name . ($manufacturerName !== '' ? ' (' . $manufacturerName . ')' : ''),
+                ];
+            }
+        }
+
+        return $this->response->withType('application/json')->withStringBody((string) json_encode($items));
     }
 
     public function index(): void

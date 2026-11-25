@@ -60,3 +60,18 @@ if (Configure::read('app.showOrderedProductsTotalAmountInCatalog')) {
     ]
     );
 ?>
+
+if (!empty($productBlogPosts['posts'])) {
+    echo '<div class="product-blog-posts">';
+    echo '<h2 class="further-news">' . __('Further_news') . '</h2>';
+    echo '<div class="blog-related-row">';
+    echo $this->element('blogPosts', [
+        'blogPosts' => $productBlogPosts['posts'],
+        'useCarousel' => false
+    ]);
+    echo '</div>';
+    if ($productBlogPosts['count'] > count($productBlogPosts['posts'])) {
+        echo '<p class="product-blog-posts-more"><a href="' . $this->Slug->getBlogList() . '">Alle Beiträge ansehen</a></p>';
+    }
+    echo '</div>';
+}

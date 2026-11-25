@@ -48,6 +48,10 @@ class ProductsController extends FrontendController
 
         $this->set('product', $product[0]);
 
+        $blogPostsTable = $this->getTableLocator()->get('BlogPosts');
+        $productBlogPosts = $blogPostsTable->findBlogPostsForProduct($productId, (int) $product[0]->id_manufacturer, 4);
+        $this->set('productBlogPosts', $productBlogPosts);
+
         $correctSlug = StringComponent::slugify($product[0]->name);
         $givenSlug = StringComponent::removeIdFromSlug($this->getRequest()->getParam('idAndSlug'));
         if ($correctSlug != $givenSlug) {

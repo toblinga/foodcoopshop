@@ -74,7 +74,7 @@ class BlogPostsTable extends AppTable
             $conditions[] = '(Manufacturers.is_private IS NULL OR Manufacturers.is_private = ' . APP_OFF.')';
         }
         if ($manufacturerId) {
-            $conditions[$this->aliasField('id_manufacturer')] = $manufacturerId;
+            $conditions[$this->aliasField('id_blog_post') . ' IN'] = $this->getBlogPostIdsSubquery(self::TABLE_MAP_MANUFACTURERS, 'id_manufacturer', $manufacturerId);
         }
 
         $blogPosts = $this->find('all',
@@ -89,6 +89,105 @@ class BlogPostsTable extends AppTable
         /** @var SelectQuery<\App\Model\Entity\BlogPost> $blogPosts */
 
         return $this->getConditionShowOnStartPage($blogPosts, $showOnStartPage);
+    }
+
+    public const TABLE_MAP_MANUFACTURERS = 'fcs_blog_post_manufacturers';
+    public const TABLE_MAP_PRODUCTS = 'fcs_blog_post_products';
+
+    private function getBlogPostIdsSubquery(string $table, string $column, int $id): \Cake\Database\Query\SelectQuery
+    {
+        return $this->getConnection()->selectQuery()
+            ->select(['id_blog_post'])
+            ->from($table)
+            ->where([$column => $id]);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getMappedManufacturerIds(int $blogPostId): array
+    {
+        return $this->getMappedIds(self::TABLE_MAP_MANUFACTURERS, 'id_manufacturer', $blogPostId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getMappedProductIds(int $blogPostId): array
+    {
+        return $this->getMappedIds(self::TABLE_MAP_PRODUCTS, 'id_product', $blogPostId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function getMappedIds(string $table, string $column, int $blogPostId): array
+    {
+        $rows = $this->getConnection()->selectQuery()
+            ->select([$column])
+            ->from($table)
+            ->where(['id_blog_post' => $blogPostId])
+            ->execute()
+            ->fetchAll('assoc');
+        return array_values(array_map(fn ($row) => (int) $row[$column], $rows));
+    }
+
+    /**
+     * @param list<int|string> $manufacturerIds
+     * @param list<int|string> $productIds
+     */
+    public function saveMappings(int $blogPostId, array $manufacturerIds, array $productIds): void
+    {
+        $connection = $this->getConnection();
+        $connection->transactional(function () use ($connection, $blogPostId, $manufacturerIds, $productIds): void {
+            $connection->delete(self::TABLE_MAP_MANUFACTURERS, ['id_blog_post' => $blogPostId]);
+            $connection->delete(self::TABLE_MAP_PRODUCTS, ['id_blog_post' => $blogPostId]);
+            foreach (array_unique(array_filter(array_map('intval', $manufacturerIds))) as $idManufacturer) {
+                $connection->insert(self::TABLE_MAP_MANUFACTURERS, ['id_blog_post' => $blogPostId, 'id_manufacturer' => $idManufacturer]);
+            }
+            foreach (array_unique(array_filter(array_map('intval', $productIds))) as $idProduct) {
+                $connection->insert(self::TABLE_MAP_PRODUCTS, ['id_blog_post' => $blogPostId, 'id_product' => $idProduct]);
+            }
+        });
+    }
+
+    /**
+     * Beiträge, die einem Produkt direkt oder über dessen Lieferanten zugeordnet sind.
+     * @return array{posts: list<\App\Model\Entity\BlogPost>, count: int}
+     */
+    public function findBlogPostsForProduct(int $productId, int $manufacturerId, int $limit): array
+    {
+        if (!Configure::read('app.isBlogFeatureEnabled')) {
+            return ['posts' => [], 'count' => 0];
+        }
+
+        $conditions = [
+            $this->aliasField('active') => APP_ON,
+            'OR' => [
+                [$this->aliasField('id_blog_post') . ' IN' => $this->getBlogPostIdsSubquery(self::TABLE_MAP_PRODUCTS, 'id_product', $productId)],
+                [$this->aliasField('id_blog_post') . ' IN' => $this->getBlogPostIdsSubquery(self::TABLE_MAP_MANUFACTURERS, 'id_manufacturer', $manufacturerId)],
+            ],
+        ];
+
+        $identity = Router::getRequest()->getAttribute('identity');
+        if ($identity === null) {
+            $conditions[$this->aliasField('is_private')] = APP_OFF;
+            $conditions[] = '(Manufacturers.is_private IS NULL OR Manufacturers.is_private = ' . APP_OFF . ')';
+        }
+
+        $query = $this->find('all',
+            conditions: $conditions,
+            order: [
+                $this->aliasField('modified') => 'DESC',
+            ],
+            contain: [
+                'Manufacturers',
+            ],
+        );
+        $count = $query->count();
+        $posts = $query->limit($limit)->all()->toArray();
+
+        return ['posts' => $posts, 'count' => $count];
     }
 
     /**
