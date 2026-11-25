@@ -116,5 +116,10 @@ if (!$isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck) {
     }   
 }
 if (!empty($unityStrings)) {
-    echo '<div class="unity">'.__('Unit').': <span class="value">' . join(', ', $unityStrings).'</span></div>';
+    if ($isTile) {
+        // Kachel: nur der Wert, ohne Beschriftung "Einheit:"
+        echo '<div class="unity"><span class="value">' . join(', ', $unityStrings).'</span></div>';
+    } else {
+        echo '<div class="unity">'.__('Unit').': <span class="value">' . join(', ', $unityStrings).'</span></div>';
+    }
 }
