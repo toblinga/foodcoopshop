@@ -2199,8 +2199,21 @@ div.products-wrapper.kacheln > .pw .c2 > .descriptions > .t-short {
     word-break: break-word;
     margin-bottom: 6px;
 }
-div.products-wrapper.kacheln > .pw .c2 > .t-pickup { order: 100; margin-top: 8px; }
-div.products-wrapper.kacheln > .pw .c2 > .t-mfr { order: 110; margin-top: 8px; }
+div.products-wrapper.kacheln > .pw .c2 > .t-pickup { order: 100; margin-top: 0; }
+div.products-wrapper.kacheln > .pw .c2 > .t-mfr { order: 110; margin-top: 0; }
+/* Fuehrende Zeilenumbrueche aus der Listenansicht wuerden sonst eine Leerzeile erzeugen */
+div.products-wrapper.kacheln > .pw .t-pickup > br:first-child,
+div.products-wrapper.kacheln > .pw .t-mfr > br:first-child,
+div.products-wrapper.kacheln > .pw .t-pickup .last-order-day > br:first-child {
+    display: none;
+}
+div.products-wrapper.kacheln > .pw .t-pickup .last-order-day {
+    display: block;
+}
+/* leere Hinweiszeile (nicht verfuegbar) nicht als Abstand rendern */
+div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .not-available-info:empty) {
+    display: none;
+}
 div.products-wrapper.kacheln > .pw .c3 > .radio,
 div.products-wrapper.kacheln > .pw .c3 > .unity,
 div.products-wrapper.kacheln > .pw .c3 > .t-variants,
