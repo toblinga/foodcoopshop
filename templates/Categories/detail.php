@@ -49,6 +49,10 @@ if (!empty($blogPosts) && $blogPosts->count() > 0) {
 }
 ?>
 
+<?php
+$isTileView = $this->request->getCookie('fcsProductView') === 'kacheln';
+?>
+
 <h1 class="middle-line">
     <span class="left"><?php echo $title_for_layout; ?></span>
     <span class="middle"></span>
@@ -59,6 +63,9 @@ if (!empty($blogPosts) && $blogPosts->count() > 0) {
                 'pagesCount' => $pagesCount,
                 'totalProductCount' => $totalProductCount,
                 'products' => $products,
+            ]);
+            echo $this->element('catalog/productViewSwitch', [
+                'isTileView' => $isTileView,
             ]);
         ?>
     </span>
@@ -82,7 +89,7 @@ if (!empty($category)) {
 
 echo $this->element('stockProductInListInfo');
 
-echo '<div class="products-wrapper">';
+echo '<div class="products-wrapper' . ($isTileView ? ' kacheln' : '') . '">';
     foreach ($products as $product) {
         echo $this->element('catalog/product', [
             'product' => $product,

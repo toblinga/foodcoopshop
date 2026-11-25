@@ -2106,3 +2106,114 @@ body.has-page-banner #content {
     display: block;
     color: var(--warning-red);
 }
+
+/* ---------- Kachelansicht fuer Produktlisten (Kategorie- und Suchseite) ----------
+   Gleiches Markup wie die Listenansicht (c1/c2/c3), nur anders angeordnet.
+   Standard ist die Liste; die Klasse "kacheln" setzt das Script bzw. das Cookie fcsProductView. */
+.product-view-switch {
+    display: inline-block;
+    margin-left: 12px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.product-view-switch a {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-left: 2px;
+    border: 1px solid #d6d4d4;
+    border-radius: 4px;
+    color: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    background: transparent;
+}
+.product-view-switch a.active {
+    background: #d6d4d4;
+}
+div.products-wrapper.kacheln {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 14px;
+    align-items: stretch;
+}
+div.products-wrapper.kacheln::after {
+    display: none;
+}
+div.products-wrapper.kacheln > .pw {
+    float: none;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #d6d4d4;
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+div.products-wrapper.kacheln > .pw div.c1 {
+    float: none !important;
+    width: 100% !important;
+    margin: 0 0 10px 0 !important;
+}
+#inner-content div.products-wrapper.kacheln > .pw div.c1 img {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 170px !important;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 5px;
+    margin: 0 auto;
+}
+div.products-wrapper.kacheln > .pw div.c2 {
+    float: none !important;
+    width: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 10px 0 !important;
+    border: 0 !important;
+}
+div.products-wrapper.kacheln > .pw div.c2 .heading {
+    width: 100%;
+}
+div.products-wrapper.kacheln > .pw div.c2 .heading h4 {
+    float: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 46px;
+    line-height: 23px;
+    margin: 0 0 6px 0;
+    word-break: break-word;
+}
+div.products-wrapper.kacheln > .pw div.c3 {
+    float: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 10px 0 0 0 !important;
+    border: 0 !important;
+    border-top: 1px solid #d6d4d4 !important;
+}
+div.products-wrapper.kacheln > .pw div.c3 .price {
+    font-size: 1.25em;
+}
+div.products-wrapper.kacheln > .pw .amount-wrapper {
+    width: 100%;
+}
+div.products-wrapper.kacheln > .pw .btn-cart {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+@media (max-width: 767px) {
+    div.products-wrapper.kacheln {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    #inner-content div.products-wrapper.kacheln > .pw div.c1 img {
+        height: 150px !important;
+    }
+}
