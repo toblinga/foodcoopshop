@@ -39,6 +39,9 @@ return function (RouteBuilder $routes) {
         if (Configure::read('app.isBlogFeatureEnabled')) {
             $routes->redirect('/'.__('route_news_list_old'), ['controller' => 'BlogPosts', 'action' => 'index']);
             $routes->connect('/'.__('route_news_list'), ['controller' => 'BlogPosts', 'action' => 'index']);
+            $routes->connect('/'.__('route_news_list').'/stichwort/{idAndSlug}', ['controller' => 'BlogPosts', 'action' => 'tag'])
+                ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])
+                ->setPass(['idAndSlug']);
             $routes->connect('/'.__('route_news_list').'/kategorie/{idAndSlug}', ['controller' => 'BlogPosts', 'action' => 'category'])
                 ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])
                 ->setPass(['idAndSlug']);

@@ -53,6 +53,13 @@ if ($blogPost->short_description != '') {
         }
         echo '</ul>';
     }
+    if (!empty($blogTags)) {
+        echo '<p class="blog-tags">';
+        foreach ($blogTags as $blogTag) {
+            echo $this->Html->link($blogTag['name'], $this->Slug->getBlogTag($blogTag['id'], $blogTag['name']), ['class' => 'blog-tag']) . ' ';
+        }
+        echo '</p>';
+    }
     echo '<p><i>';
         echo '<br />'.__('Modified_on'). ' ' . $blogPost->modified->i18nFormat(Configure::read('app.timeHelper')->getI18Format('DateNTimeShort'));
 if (!empty($blogPost->manufacturer)) {

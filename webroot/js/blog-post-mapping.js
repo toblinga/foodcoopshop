@@ -1,6 +1,8 @@
 /**
- * Chip-Eingabe (Tom Select) fuer die Zuordnung von Blogbeitraegen zu Lieferanten und Produkten.
- * Die Suche laeuft live (search as you type) ueber den JSON-Endpunkt Admin/BlogPosts/searchTargets.
+ * Chip-Eingabe (Tom Select) fuer Blogbeitraege:
+ * - supplier-product: Lieferanten und Produkte in einem Feld, Live-Suche
+ * - tag: Stichwoerter, Live-Suche, neue Stichwoerter per Eingabe
+ * - category: feste Auswahl ohne Suche
  */
 foodcoopshop.BlogPostMapping = {
 
@@ -17,26 +19,34 @@ foodcoopshop.BlogPostMapping = {
         var self = this;
         document.querySelectorAll('select.blog-post-mapping').forEach(function (element) {
             var type = element.getAttribute('data-mapping');
-            foodcoopshop.TomSelectCustom.init(element, {
+            var hasSearch = !!element.getAttribute('data-search-url');
+            var settings = {
                 plugins: ['remove_button'],
                 valueField: 'value',
                 labelField: 'text',
                 searchField: ['text'],
                 maxItems: null,
                 hideSelected: true,
-                preload: 'focus',
-                placeholder: element.getAttribute('data-placeholder') || '',
-                load: element.getAttribute('data-search-url') ? function (query, callback) {
+                preload: hasSearch ? 'focus' : null,
+                placeholder: element.getAttribute('data-placeholder') || ''
+            };
+            if (hasSearch) {
+                settings.load = function (query, callback) {
                     self.search(element, type, query, callback);
-                } : undefined
-            });
+                };
+            }
+            if (type === 'tag') {
+                settings.create = true;
+                settings.createOnBlur = false;
+            }
+            foodcoopshop.TomSelectCustom.init(element, settings);
         });
 
         var addAllButton = document.querySelector('.add-all-products-of-manufacturer');
         if (addAllButton) {
             addAllButton.addEventListener('click', function (event) {
                 event.preventDefault();
-                self.addAllProductsOfManufacturer();
+                self.addAllProductsOfFirstSupplier();
             });
         }
     },
@@ -51,29 +61,31 @@ foodcoopshop.BlogPostMapping = {
             .catch(function () { callback(); });
     },
 
-    addAllProductsOfManufacturer: function () {
-        var manufacturer = this.getTomSelect('manufacturer');
-        var products = this.getTomSelect('product');
-        var productElement = this.getSelect('product');
-        if (!manufacturer || !products || !productElement) {
+    addAllProductsOfFirstSupplier: function () {
+        var supplierProducts = this.getTomSelect('supplier-product');
+        var element = this.getSelect('supplier-product');
+        if (!supplierProducts || !element) {
             return;
         }
-        var manufacturerId = manufacturer.getValue();
-        if (Array.isArray(manufacturerId)) {
-            manufacturerId = manufacturerId[0];
+        var values = supplierProducts.getValue();
+        if (!Array.isArray(values)) {
+            values = values ? [values] : [];
         }
-        if (!manufacturerId) {
+        var supplierValue = values.find(function (value) { return String(value).indexOf('m:') === 0; });
+        if (!supplierValue) {
             window.alert('Bitte zuerst einen Lieferanten auswählen.');
             return;
         }
-        var url = productElement.getAttribute('data-search-url') +
+        var manufacturerId = String(supplierValue).substring(2);
+        var url = element.getAttribute('data-search-url') +
             '?type=product&q=&manufacturer_id=' + encodeURIComponent(manufacturerId);
         fetch(url, { credentials: 'same-origin' })
             .then(function (response) { return response.json(); })
             .then(function (items) {
                 items.forEach(function (item) {
-                    products.addOption(item);
-                    products.addItem(item.value);
+                    var value = 'p:' + item.value;
+                    supplierProducts.addOption({ value: value, text: 'Produkt: ' + item.text });
+                    supplierProducts.addItem(value);
                 });
             });
     }

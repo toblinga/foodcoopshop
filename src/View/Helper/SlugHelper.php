@@ -414,6 +414,11 @@ class SlugHelper extends Helper
         return '/'.__('route_news_list');
     }
 
+    public function getBlogTag(int $blogTagId, string $name): string
+    {
+        return '/'.__('route_news_list') . '/stichwort/' . $blogTagId . '-' . StringComponent::slugify($name);
+    }
+
     public function getBlogCategory(int $blogCategoryId, string $name): string
     {
         return '/'.__('route_news_list') . '/kategorie/' . $blogCategoryId . '-' . StringComponent::slugify($name);

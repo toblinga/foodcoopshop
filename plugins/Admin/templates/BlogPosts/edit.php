@@ -105,35 +105,21 @@ echo '<div class="warning">';
 echo '</div>';
 
 if (Configure::read('app.showManufacturerListAndDetailPage') && ($identity->isSuperadmin() || $identity->isAdmin() || $identity->isManufacturer())) {
-    $searchUrl = $this->Url->build(['plugin' => 'Admin', 'controller' => 'BlogPosts', 'action' => 'searchTargets']);
-    if (!$identity->isManufacturer()) {
-        echo $this->Form->control('BlogPosts.manufacturer_ids', [
-            'type' => 'select',
-            'multiple' => true,
-            'label' => __('Manufacturer'),
-            'options' => $selectedManufacturers,
-            'value' => array_keys($selectedManufacturers),
-            'class' => 'blog-post-mapping',
-            'data-mapping' => 'manufacturer',
-            'data-search-url' => $searchUrl,
-            'data-placeholder' => 'Lieferant suchen und auswählen ...',
-        ]);
-    }
-    echo $this->Form->control('BlogPosts.product_ids', [
+    echo $this->Form->control('BlogPosts.supplier_product_ids', [
         'type' => 'select',
         'multiple' => true,
-        'label' => 'Produkte',
-        'options' => $selectedProducts,
-        'value' => array_keys($selectedProducts),
+        'label' => 'Lieferanten & Produkte',
+        'options' => $selectedSupplierProducts,
+        'value' => array_keys($selectedSupplierProducts),
         'class' => 'blog-post-mapping',
-        'data-mapping' => 'product',
-        'data-search-url' => $searchUrl,
-        'data-placeholder' => 'Produkt suchen und auswählen ...',
+        'data-mapping' => 'supplier-product',
+        'data-search-url' => $this->Url->build(['plugin' => 'Admin', 'controller' => 'BlogPosts', 'action' => 'searchTargets']),
+        'data-placeholder' => 'Lieferant oder Produkt suchen ...',
     ]);
     if (!$identity->isManufacturer()) {
-        echo '<div class="input"><label></label><button type="button" class="btn btn-outline-light add-all-products-of-manufacturer"><i class="fas fa-plus"></i> Alle Produkte des gewählten Lieferanten übernehmen</button></div>';
+        echo '<div class="input"><label></label><button type="button" class="btn btn-outline-light add-all-products-of-manufacturer"><i class="fas fa-plus"></i> Alle Produkte des ersten gewählten Lieferanten übernehmen</button></div>';
     }
-    echo '<span class="description small">'.__('Blog_post_manufacturer_description') . '</span>';
+    echo '<span class="description small">Wird ein Produkt gewählt, wird sein Lieferant automatisch mit zugeordnet.</span>';
 }
 
 echo $this->Form->control('BlogPosts.category_ids', [
@@ -147,6 +133,18 @@ echo $this->Form->control('BlogPosts.category_ids', [
     'data-placeholder' => 'Kategorie wählen ...',
 ]);
 echo '<span class="description small">Unterkategorien werden als Baum angezeigt, z. B. Rezepte › Hauptspeise.</span>';
+
+echo $this->Form->control('BlogPosts.tag_values', [
+    'type' => 'select',
+    'multiple' => true,
+    'label' => 'Stichwörter',
+    'options' => $selectedTags,
+    'value' => array_keys($selectedTags),
+    'class' => 'blog-post-mapping',
+    'data-mapping' => 'tag',
+    'data-search-url' => $this->Url->build(['plugin' => 'Admin', 'controller' => 'BlogPosts', 'action' => 'searchTargets']),
+    'data-placeholder' => 'Stichwort suchen oder neu eingeben ...',
+]);
 
 echo $this->Form->control('BlogPosts.show_on_start_page_until', [
     'class' => 'datepicker',

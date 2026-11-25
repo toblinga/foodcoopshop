@@ -33,7 +33,32 @@ class BlogPostsController extends FrontendController
             'index',
             'detail',
             'category',
+            'tag',
         ]);
+    }
+
+    public function tag(): ?Response
+    {
+        $idAndSlug = (string) $this->getRequest()->getParam('idAndSlug');
+        $tagId = (int) $idAndSlug;
+
+        $blogTag = TableRegistry::getTableLocator()->get('BlogTags')->find()
+            ->where(['id_blog_tag' => $tagId, 'active' => APP_ON])
+            ->first();
+        if (empty($blogTag)) {
+            throw new RecordNotFoundException('blog tag not found');
+        }
+
+        $correctSlug = StringComponent::slugify($blogTag->name);
+        $givenSlug = StringComponent::removeIdFromSlug($idAndSlug);
+        if ($correctSlug != $givenSlug) {
+            return $this->redirect(Configure::read('app.slugHelper')->getBlogTag($tagId, $blogTag->name));
+        }
+
+        $this->set('blogPosts', TableRegistry::getTableLocator()->get('BlogPosts')->findBlogPostsByTag($tagId));
+        $this->set('blogTag', $blogTag);
+        $this->set('title_for_layout', $blogTag->name);
+        return null;
     }
 
     public function category(): ?Response
@@ -91,6 +116,7 @@ class BlogPostsController extends FrontendController
 
         $blogCategoriesTable = TableRegistry::getTableLocator()->get('BlogCategories');
         $this->set('blogCategories', $blogCategoriesTable->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? []);
+        $this->set('blogTags', TableRegistry::getTableLocator()->get('BlogTags')->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? []);
         $this->set('blogPost', $blogPost);
 
         // START find neighbors

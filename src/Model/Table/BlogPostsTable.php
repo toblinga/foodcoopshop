@@ -227,6 +227,42 @@ class BlogPostsTable extends AppTable
     }
 
     /**
+     * Beitraege eines Stichworts, neueste Veroeffentlichung zuerst
+     * @return SelectQuery<\App\Model\Entity\BlogPost>|list<\App\Model\Entity\BlogPost>
+     */
+    public function findBlogPostsByTag(int $tagId): SelectQuery|array
+    {
+        if (!Configure::read('app.isBlogFeatureEnabled')) {
+            /** @var list<\App\Model\Entity\BlogPost> $empty */
+            $empty = [];
+            return $empty;
+        }
+
+        $conditions = [
+            $this->aliasField('active') => APP_ON,
+            $this->aliasField('id_blog_post') . ' IN' => $this->getBlogPostIdsSubquery(BlogTagsTable::TABLE_MAP, 'id_blog_tag', $tagId),
+        ];
+
+        $identity = Router::getRequest()->getAttribute('identity');
+        if ($identity === null) {
+            $conditions[$this->aliasField('is_private')] = APP_OFF;
+            $conditions[] = '(Manufacturers.is_private IS NULL OR Manufacturers.is_private = ' . APP_OFF . ')';
+        }
+
+        /** @var SelectQuery<\App\Model\Entity\BlogPost> $query */
+        $query = $this->find('all',
+            conditions: $conditions,
+            order: [
+                $this->aliasField('created') => 'DESC',
+            ],
+            contain: [
+                'Manufacturers',
+            ],
+        );
+        return $query;
+    }
+
+    /**
      * @template T of array|\Cake\Datasource\EntityInterface
      * @param SelectQuery<T> $query
      * @return SelectQuery<T>

@@ -87,25 +87,37 @@ class BlogPostsController extends AdminAppController
         $this->set('manufacturersForDropdown', $manufacturersTable->getForDropdown());
 
         $productsTable = $this->getTableLocator()->get('Products');
-        $selectedManufacturers = [];
-        $selectedProducts = [];
+        $selectedSupplierProducts = [];
+        $selectedTags = [];
         if ($isEditMode && !empty($blogPost->id_blog_post)) {
             $blogPostsTableForMapping = $this->getTableLocator()->get('BlogPosts');
             $manufacturerIdsForForm = $blogPostsTableForMapping->getMappedManufacturerIds((int) $blogPost->id_blog_post);
             $productIdsForForm = $blogPostsTableForMapping->getMappedProductIds((int) $blogPost->id_blog_post);
             if (!empty($manufacturerIdsForForm)) {
-                $selectedManufacturers = $manufacturersTable->find('list', keyField: 'id_manufacturer', valueField: 'name')
+                $manufacturerNames = $manufacturersTable->find('list', keyField: 'id_manufacturer', valueField: 'name')
                     ->where(['id_manufacturer IN' => $manufacturerIdsForForm])
                     ->all()->toArray();
+                foreach ($manufacturerNames as $idManufacturer => $name) {
+                    $selectedSupplierProducts['m:' . $idManufacturer] = 'Lieferant: ' . $name;
+                }
             }
             if (!empty($productIdsForForm)) {
-                $selectedProducts = $productsTable->find('list', keyField: 'id_product', valueField: 'name')
-                    ->where(['id_product IN' => $productIdsForForm])
-                    ->all()->toArray();
+                $products = $productsTable->find()
+                    ->select(['Products.id_product', 'Products.name', 'Manufacturers.name'])
+                    ->contain(['Manufacturers'])
+                    ->where(['Products.id_product IN' => $productIdsForForm])
+                    ->all();
+                foreach ($products as $product) {
+                    $manufacturerName = $product->hasValue('manufacturer') ? $product->manufacturer->name : '';
+                    $selectedSupplierProducts['p:' . $product->id_product] = 'Produkt: ' . $product->name . ($manufacturerName !== '' ? ' (' . $manufacturerName . ')' : '');
+                }
+            }
+            foreach ($this->getTableLocator()->get('BlogTags')->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? [] as $tag) {
+                $selectedTags[$tag['id']] = $tag['name'];
             }
         }
-        $this->set('selectedManufacturers', $selectedManufacturers);
-        $this->set('selectedProducts', $selectedProducts);
+        $this->set('selectedSupplierProducts', $selectedSupplierProducts);
+        $this->set('selectedTags', $selectedTags);
 
         $blogCategoriesTable = $this->getTableLocator()->get('BlogCategories');
         $categoryOptions = [];
@@ -133,20 +145,35 @@ class BlogPostsController extends AdminAppController
 
         $this->setRequest($this->getRequest()->withData('BlogPosts.id_customer', $this->identity->getId()));
 
-        $manufacturerIds = (array) $this->getRequest()->getData('BlogPosts.manufacturer_ids', []);
-        $productIds = (array) $this->getRequest()->getData('BlogPosts.product_ids', []);
+        $manufacturerIds = [];
+        $productIds = [];
+        foreach ((array) $this->getRequest()->getData('BlogPosts.supplier_product_ids', []) as $value) {
+            $value = (string) $value;
+            if (str_starts_with($value, 'm:')) {
+                $manufacturerIds[] = (int) substr($value, 2);
+            } elseif (str_starts_with($value, 'p:')) {
+                $productIds[] = (int) substr($value, 2);
+            }
+        }
         if ($this->identity->isManufacturer()) {
             $ownManufacturerId = (int) $this->identity->getManufacturerId();
             $manufacturerIds = [$ownManufacturerId];
             // Hersteller duerfen nur eigene Produkte zuordnen
             $productIds = $productsTable->find()
                 ->select(['id_product'])
-                ->where(['id_manufacturer' => $ownManufacturerId, 'id_product IN' => array_map('intval', $productIds) ?: [0]])
+                ->where(['id_manufacturer' => $ownManufacturerId, 'id_product IN' => $productIds ?: [0]])
                 ->all()->extract('id_product')->toList();
+        } elseif (!empty($productIds)) {
+            // Lieferant eines gewaehlten Produkts wird automatisch mitgesetzt
+            $implicitManufacturers = $productsTable->find()
+                ->select(['id_manufacturer'])
+                ->where(['id_product IN' => $productIds])
+                ->all()->extract('id_manufacturer')->toList();
+            $manufacturerIds = array_merge($manufacturerIds, array_map('intval', $implicitManufacturers));
         }
         $categoryIds = (array) $this->getRequest()->getData('BlogPosts.category_ids', []);
+        $tagValues = (array) $this->getRequest()->getData('BlogPosts.tag_values', []);
         // Hauptlieferant (fuer Standardbild-Fallback) = erster gewaehlter Lieferant
-        $this->setRequest($this->getRequest()->withData('BlogPosts.id_manufacturer', (int) ($manufacturerIds[0] ?? 0)));
 
         if (!$this->getRequest()->getData('BlogPosts.update_modified_field') && !$this->identity->isManufacturer() && $isEditMode) {
             $blogPostsTable->removeBehavior('Timestamp');
@@ -167,6 +194,7 @@ class BlogPostsController extends AdminAppController
             if ($blogPost) {
                 $blogPostsTable->saveMappings((int) $blogPost->id_blog_post, $manufacturerIds, $productIds);
                 $this->getTableLocator()->get('BlogCategories')->saveMappings((int) $blogPost->id_blog_post, $categoryIds);
+                $this->getTableLocator()->get('BlogTags')->saveMappings((int) $blogPost->id_blog_post, $tagValues);
             }
 
             if (!$isEditMode) {
@@ -225,6 +253,38 @@ class BlogPostsController extends AdminAppController
             }
             foreach ($query->orderBy(['name' => 'ASC'])->limit(30)->all() as $manufacturer) {
                 $items[] = ['value' => (int) $manufacturer->id_manufacturer, 'text' => $manufacturer->name];
+            }
+        } elseif ($type === 'supplier-product') {
+            $manufacturerQuery = $this->getTableLocator()->get('Manufacturers')->find()
+                ->select(['id_manufacturer', 'name']);
+            $productQuery = $this->getTableLocator()->get('Products')->find()
+                ->select(['Products.id_product', 'Products.name', 'Manufacturers.name'])
+                ->contain(['Manufacturers'])
+                ->where(['Products.active' => APP_ON]);
+            if ($this->identity->isManufacturer()) {
+                $manufacturerQuery->where(['id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+                $productQuery->where(['Products.id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+            }
+            if ($term !== '') {
+                $manufacturerQuery->where(['name LIKE' => '%' . $term . '%']);
+                $productQuery->where(['Products.name LIKE' => '%' . $term . '%']);
+            }
+            foreach ($manufacturerQuery->orderBy(['name' => 'ASC'])->limit(10)->all() as $manufacturer) {
+                $items[] = ['value' => 'm:' . (int) $manufacturer->id_manufacturer, 'text' => 'Lieferant: ' . $manufacturer->name];
+            }
+            foreach ($productQuery->orderBy(['Products.name' => 'ASC'])->limit(30)->all() as $product) {
+                $manufacturerName = $product->hasValue('manufacturer') ? $product->manufacturer->name : '';
+                $items[] = ['value' => 'p:' . (int) $product->id_product, 'text' => 'Produkt: ' . $product->name . ($manufacturerName !== '' ? ' (' . $manufacturerName . ')' : '')];
+            }
+        } elseif ($type === 'tag') {
+            $tagQuery = $this->getTableLocator()->get('BlogTags')->find()
+                ->select(['id_blog_tag', 'name'])
+                ->where(['active' => APP_ON]);
+            if ($term !== '') {
+                $tagQuery->where(['name LIKE' => '%' . $term . '%']);
+            }
+            foreach ($tagQuery->orderBy(['name' => 'ASC'])->limit(30)->all() as $tag) {
+                $items[] = ['value' => (int) $tag->id_blog_tag, 'text' => $tag->name];
             }
         } elseif ($type === 'product') {
             $query = $this->getTableLocator()->get('Products')->find()
