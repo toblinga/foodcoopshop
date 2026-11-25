@@ -70,7 +70,7 @@ class MenuHelper extends Helper
                     if ($childPage->extern_url != '') {
                         $slug = $childPage->extern_url;
                     } else {
-                        $slug = Configure::read('app.slugHelper')->getPageDetail($childPage->id_page, $childPage->title);
+                        $slug = Configure::read('app.slugHelper')->getPagePath($childPage);
                     }
                     $children[] = [
                         'name' => $childPage->title,
@@ -81,7 +81,7 @@ class MenuHelper extends Helper
             if ($page->extern_url != '') {
                 $slug = $page->extern_url;
             } else {
-                $slug = Configure::read('app.slugHelper')->getPageDetail($page->id_page, $page->title);
+                $slug = Configure::read('app.slugHelper')->getPagePath($page);
             }
             $menu[] = [
                 'name' => $page->title,

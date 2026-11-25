@@ -121,6 +121,17 @@ class SlugHelper extends Helper
         return '/'.__('route_manufacturer_detail').'/'.$manufacturerId.'-'.StringComponent::slugify($manufacturerName);
     }
 
+    /**
+     * Neue Adresse einer Seite (z. B. /ueber-uns/darum-bio). Ohne Adresse: alte Adresse mit ID.
+     */
+    public function getPagePath(object $page): string
+    {
+        if (!empty($page->slug)) {
+            return '/' . $page->slug;
+        }
+        return $this->getPageDetail((int) $page->id_page, (string) $page->title);
+    }
+
     public function getPageDetail(int $pageId, string $name): string
     {
         return '/'.__('route_content').'/'.$pageId.'-'.StringComponent::slugify($name);

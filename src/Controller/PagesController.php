@@ -41,8 +41,12 @@ class PagesController extends FrontendController
         ]);
     }
 
-    public function home(): void
+    public function home(): ?Response
     {
+        // shop.<domain> soll direkt im Shop landen, nicht auf der Startseite
+        if (str_starts_with($this->getRequest()->getUri()->getHost(), 'shop.')) {
+            return $this->redirect('/shop', 301);
+        }
 
         $headerPromosTable = $this->getTableLocator()->get('HeaderPromos');
         $headerPromo = $headerPromosTable->find('all', conditions: [
@@ -84,17 +88,28 @@ class PagesController extends FrontendController
         }
         $this->set('newProducts', $products);
 
+        return null;
     }
 
     public function detail(): ?Response
     {
 
-        $pageId = (int) $this->getRequest()->getParam('idAndSlug');
-
-        $conditions = [
-            'Pages.id_page' => $pageId,
-            'Pages.active' => APP_ON
-        ];
+        $idAndSlug = $this->getRequest()->getParam('idAndSlug');
+        $slugPath = null;
+        if ($idAndSlug === null) {
+            // neue Adresse: /ueber-uns/darum-bio
+            $slugPath = implode('/', (array) $this->getRequest()->getParam('pass', []));
+            $conditions = [
+                'Pages.slug' => $slugPath,
+                'Pages.active' => APP_ON
+            ];
+        } else {
+            // alte Adresse: /content/{id}-{slug}
+            $conditions = [
+                'Pages.id_page' => (int) $idAndSlug,
+                'Pages.active' => APP_ON
+            ];
+        }
 
         $pagesTable = $this->getTableLocator()->get('Pages');
         $page = $pagesTable->find('all',
@@ -118,7 +133,7 @@ class PagesController extends FrontendController
             $conditionsForChildren[$pagesTable->aliasField('is_private')] = APP_OFF;
         }
         $page->children = $pagesTable->find('children',
-            for: $pageId,
+            for: (int) $page->id_page,
             direct: true,
             parentField: 'id_parent',
             conditions: $conditionsForChildren,
@@ -127,10 +142,9 @@ class PagesController extends FrontendController
                 $pagesTable->aliasField('title') => 'ASC'
             ]);
 
-        $correctSlug = StringComponent::slugify($page->title);
-        $givenSlug = StringComponent::removeIdFromSlug($this->getRequest()->getParam('pass')[0]);
-        if ($correctSlug != $givenSlug) {
-            return $this->redirect(Configure::read('app.slugHelper')->getPageDetail($pageId, $page->title));
+        // alte Adresse (/content/{id}-{slug}) leitet dauerhaft auf die neue Adresse
+        if ($slugPath === null && !empty($page->slug)) {
+            return $this->redirect(Configure::read('app.slugHelper')->getPagePath($page), 301);
         }
 
         $this->set('page', $page);

@@ -3,7 +3,11 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Controller\Component\StringComponent;
+use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
+use ArrayObject;
 use Cake\ORM\Query\SelectQuery;
 /**
  /**
@@ -45,6 +49,56 @@ class PagesTable extends AppTable
             'foreignKey' => 'page_id',
             'dependent' => true,
         ]);
+    }
+
+    public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        $entity->slug = $this->buildSlug($entity);
+    }
+
+    public function afterSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        // Unterseiten übernehmen die neue Adresse des Elternteils
+        $this->rebuildAllSlugs((int) $entity->id_page);
+    }
+
+    /**
+     * Adresse einer Seite: Adresse des Elternteils + eigener Titel, z. B. ueber-uns/darum-bio.
+     */
+    public function buildSlug(EntityInterface $page): string
+    {
+        $slug = strtolower(StringComponent::slugify((string) $page->title));
+        $parentId = (int) ($page->id_parent ?? 0);
+        if ($parentId > 0) {
+            $parent = $this->find()->select(['slug'])->where(['id_page' => $parentId])->first();
+            if ($parent !== null && !empty($parent->slug)) {
+                $slug = $parent->slug . '/' . $slug;
+            }
+        }
+        $candidate = $slug;
+        $i = 2;
+        $ownId = (int) ($page->id_page ?? 0);
+        while ($this->exists(['slug' => $candidate, 'id_page !=' => $ownId])) {
+            $candidate = $slug . '-' . $i;
+            $i++;
+        }
+        return $candidate;
+    }
+
+    /**
+     * Berechnet die Adressen aller Unterseiten von $parentId neu (rekursiv). Gibt die Anzahl zurück.
+     */
+    public function rebuildAllSlugs(int $parentId = 0): int
+    {
+        $count = 0;
+        $pages = $this->find()->where(['id_parent' => $parentId])->orderBy(['id_page' => 'ASC'])->all();
+        foreach ($pages as $page) {
+            $slug = $this->buildSlug($page);
+            $this->updateAll(['slug' => $slug], ['id_page' => $page->id_page]);
+            $count++;
+            $count += $this->rebuildAllSlugs((int) $page->id_page);
+        }
+        return $count;
     }
 
     public function validationDefault(Validator $validator): Validator

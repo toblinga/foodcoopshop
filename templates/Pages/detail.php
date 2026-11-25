@@ -41,7 +41,7 @@ if (!empty($page['children'])) {
     foreach ($page['children'] as $childPage) {
         echo '<p>'.$this->Html->link(
             $childPage->title,
-            $this->Slug->getPageDetail($childPage->id_page, $childPage->title),
+            $this->Slug->getPagePath($childPage),
             [
                 'class' => 'btn btn-outline-light',
                 'escape' => false

@@ -30,6 +30,8 @@ return function (RouteBuilder $routes) {
         $routes->connect('/'.__('route_accept_terms_of_use'), ['controller' => 'Customers', 'action' => 'acceptUpdatedTermsOfUse']);
 
         $routes->connect('/'.__('route_new_products'), ['controller' => 'Categories', 'action' => 'newProducts']);
+        // Shop direkt unter /shop (ohne Umweg über einen Menüpunkt): zeigt den Katalog "Alle Produkte"
+        $routes->connect('/shop', ['controller' => 'Categories', 'action' => 'detail', 'idAndSlug' => (string) Configure::read('app.categoryAllProducts'), 'shop' => true]);
         $routes->connect('/'.__('route_random_products'), ['controller' => 'Categories', 'action' => 'randomProducts']);
         $routes->connect('/'.__('route_request_new_password'), ['controller' => 'Customers', 'action' => 'newPasswordRequest']);
         $routes->connect('/'.__('route_activate_new_password').'/*', ['controller' => 'Customers', 'action' => 'activateNewPassword']);
@@ -41,6 +43,10 @@ return function (RouteBuilder $routes) {
                 ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])
                 ->setPass(['idAndSlug']);
         }
+        $routes->connect('/rezepte', ['controller' => 'Recipes', 'action' => 'index']);
+        $routes->connect('/rezepte/{idAndSlug}', ['controller' => 'Recipes', 'action' => 'detail'])
+            ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])
+            ->setPass(['idAndSlug']);
         $routes->connect('/'.__('route_search').'/*', ['controller' => 'Categories', 'action' => 'search']);
         $routes->connect('/'.__('route_category').'/{idAndSlug}', ['controller' => 'Categories', 'action' => 'detail'])
             ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])
@@ -79,6 +85,9 @@ return function (RouteBuilder $routes) {
 
         // first folder must not exist physically!
         $routes->connect('/photos/profile-images/customers/{imageSrc}', ['controller' => 'Customers', 'action' => 'profileImage']);
+
+        // Infoseiten unter ihrer Adresse, z. B. /ueber-uns/darum-bio (Auflösung im PagesController)
+        $routes->connect('/*', ['controller' => 'Pages', 'action' => 'detail']);
 
         $routes->fallbacks();
     });

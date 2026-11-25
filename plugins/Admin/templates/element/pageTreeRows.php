@@ -128,7 +128,7 @@ foreach ($pages as $page) {
     if ($page->active) {
         echo $this->Html->link(
             '<i class="fas fa-arrow-right ok"></i>',
-            $this->Slug->getPageDetail($page->id_page, $page->title),
+            $this->Slug->getPagePath($page),
             [
                 'class' => 'btn btn-outline-light',
                 'title' => __('Show_page'),
