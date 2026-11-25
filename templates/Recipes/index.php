@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+$this->element('addScript', ['script' =>
+    \Cake\Core\Configure::read('app.jsNamespace').".Helper.init();"
+]);
+
 /**
  * FoodCoopShop - The open source software for your foodcoop
  *

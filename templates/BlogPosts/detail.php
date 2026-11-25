@@ -39,7 +39,9 @@ if ($blogPost->short_description != '') {
     echo '<p><b>'.$blogPost->short_description.'</b></p>';
 }
 
-    echo '<div class="content">';
+    // Rezepte erkennen (Abschnitt "Zutaten" im Text) und nur dort die Rezept-Gestaltung anwenden
+    $isRecipe = str_contains((string) $blogPost->content, 'Zutaten');
+    echo '<div class="content' . ($isRecipe ? ' is-recipe' : '') . '">';
         echo $blogPost->content;
     echo '</div>';
 
@@ -73,21 +75,15 @@ if ($identity !== null) {
     }
 }
 
-if (!empty($neighbors['prev']) || !empty($neighbors['next'])) {
-    echo '<h2 class="further-news">'.__('Further_news').'</h2>';
-}
-if (!empty($neighbors['prev'])) {
-    echo $this->element('blogPosts', [
-    'blogPosts' => [$neighbors['prev']],
-    'useCarousel' => false,
-    'style' => 'float: left;'
-    ]);
-}
-if (!empty($neighbors['next'])) {
-    echo $this->element('blogPosts', [
-        'blogPosts' => [$neighbors['next']],
-        'useCarousel' => false,
-        'style' => 'float: right;'
-    ]);
+if (!empty($randomBlogPosts) && count($randomBlogPosts) > 0) {
+    echo '<h2 class="further-news">' . __('Further_news') . '</h2>';
+    echo '<div class="blog-related-row blog-carousel">';
+        echo '<button type="button" class="products-nav blog-nav blog-nav-prev" aria-label="zurück" onclick="document.querySelector(\'.blog-related-row .blog-wrapper\').scrollBy({left: -280, behavior: \'smooth\'})">&#8249;</button>';
+        echo $this->element('blogPosts', [
+            'blogPosts' => $randomBlogPosts,
+            'useCarousel' => false
+        ]);
+        echo '<button type="button" class="products-nav blog-nav blog-nav-next" aria-label="weiter" onclick="document.querySelector(\'.blog-related-row .blog-wrapper\').scrollBy({left: 280, behavior: \'smooth\'})">&#8250;</button>';
+    echo '</div>';
 }
 ?>

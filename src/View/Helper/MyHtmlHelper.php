@@ -813,6 +813,14 @@ class MyHtmlHelper extends HtmlHelper
         $imageFilename = $this->getImageFile($thumbsPath, $blogPost->id_blog_post . '-' . $size . '-default');
         if (is_null($imageFilename) || !file_exists($thumbsPath . DS . $imageFilename)) {
 
+            // Fallback für Blog-Teaser: kleinere Variante des Beitrags verwenden, falls keine 800px-Datei existiert
+            if ($size == 'single') {
+                $homeFilename = $this->getImageFile($thumbsPath, $blogPost->id_blog_post . '-home-default');
+                if (!is_null($homeFilename) && file_exists($thumbsPath . DS . $homeFilename)) {
+                    return $this->prepareAsUrl($urlPrefix . $homeFilename);
+                }
+            }
+
             $manufacturerSize = 'medium';
             if($size == 'single') {
                 $manufacturerSize = 'large';

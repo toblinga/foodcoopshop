@@ -17,7 +17,10 @@ declare(strict_types=1);
 
 use Cake\Core\Configure;
 
-$menu = [];
+// Reihenfolge: Infoseiten zuerst, danach die Shop-Punkte als Baum
+$menu = [['name' => __('Home'), 'slug' => '/']];
+$menu = array_merge($menu, $this->Menu->buildPageMenu($pagesForHeader));
+
 if (Configure::read('appDb.FCS_SHOW_PRODUCTS_FOR_GUESTS') || $identity !== null) {
     $menu[] = [
         'name' => __('Shop'), 'slug' => '/shop',
@@ -26,12 +29,10 @@ if (Configure::read('appDb.FCS_SHOW_PRODUCTS_FOR_GUESTS') || $identity !== null)
 }
 
 if (!empty($manufacturersForMenu)) {
+    // Hersteller nur als Link, die Liste ist zu lang für ein Untermenü
     $menu[] = [
-        'name' => __('Manufacturers'), 'slug' => $this->Slug->getManufacturerList(),
-        'children' => $manufacturersForMenu
+        'name' => __('Manufacturers'), 'slug' => $this->Slug->getManufacturerList()
     ];
 }
-
-$menu = array_merge($menu, $this->Menu->buildPageMenu($pagesForHeader));
 
 echo $this->Menu->render($menu, ['id' => 'main-menu', 'class' => 'horizontal menu']);

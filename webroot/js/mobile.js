@@ -220,6 +220,8 @@ foodcoopshop.Mobile = {
             }
         });
 
+        var headCount = menuItems.length;
+
         // if all manufacturers are disabled / set to private - do not include menu item
         $('.sidebar li.header').each(function () {
             if ($(this).html() == __('Manufacturers')) {
@@ -231,9 +233,7 @@ foodcoopshop.Mobile = {
             menuItems.push($(this).clone());
         });
 
-        $('.sidebar ul#categories-menu > li').each(function () {
-            menuItems.push($(this).clone());
-        });
+        // Kategorien kommen bereits als Baum unter "Shop" aus dem Hauptmenü, daher hier nicht noch einmal
 
         var pageItems = ['<li class="header">' + __('Pages') + '</li>'];
         $('#main-menu > li').each(function () {
@@ -249,7 +249,8 @@ foodcoopshop.Mobile = {
         });
 
         if (pageItems.length > 1) {
-            menuItems = $.merge(menuItems, pageItems);
+            // Infoseiten direkt nach dem Kopf, danach die Shop-Punkte (Hersteller, Kategorien)
+            menuItems = menuItems.slice(0, headCount).concat(pageItems, menuItems.slice(headCount));
         }
 
         $('.sb-left').html(menuItems);

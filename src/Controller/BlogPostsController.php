@@ -88,6 +88,19 @@ class BlogPostsController extends FrontendController
         ];
         $this->set('neighbors', $neighbors);
 
+        // drei zufällige andere Beiträge am Ende der Seite
+        $randomQuery = $blogPostsTable->find()
+            ->where([
+                $blogPostsTable->aliasField('active') => APP_ON,
+                $blogPostsTable->aliasField('id_blog_post !=') => $blogPost->id_blog_post,
+            ])
+            ->orderBy(['RAND()'])
+            ->limit(6);
+        if ($this->identity === null) {
+            $randomQuery->where([$blogPostsTable->aliasField('is_private') => APP_OFF]);
+        }
+        $this->set('randomBlogPosts', $randomQuery->all());
+
         $this->set('title_for_layout', $blogPost->title);
         return null;
     }

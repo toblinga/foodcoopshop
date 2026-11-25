@@ -100,10 +100,16 @@ if (!empty($homeBlocks)) {
 if (!empty($blogPosts) && $blogPosts->count() > 0) {
     echo '<h1 class="news">'.__('News').'</h1>';
 }
-echo $this->element('blogPosts', [
-    'blogPosts' => $blogPosts,
-    'useCarousel' => false
-]);
+if (!empty($blogPosts) && $blogPosts->count() > 0) {
+    echo '<div class="blog-carousel">';
+        echo '<button type="button" class="products-nav blog-nav blog-nav-prev" aria-label="zurück" onclick="document.querySelector(\'.blog-wrapper\').scrollBy({left: -280, behavior: \'smooth\'})">&#8249;</button>';
+        echo $this->element('blogPosts', [
+            'blogPosts' => $blogPosts,
+            'useCarousel' => false
+        ]);
+        echo '<button type="button" class="products-nav blog-nav blog-nav-next" aria-label="weiter" onclick="document.querySelector(\'.blog-wrapper\').scrollBy({left: 280, behavior: \'smooth\'})">&#8250;</button>';
+    echo '</div>';
+}
 
 if (!empty($newProducts)) {
 
@@ -132,24 +138,51 @@ if (!empty($newProducts)) {
 
     $isFirstElement = empty($blogPosts) || $blogPosts->count() == 0;
     echo '<h1 style="float:left;' . (!$isFirstElement ? 'margin-top:10px;' : '') . '">';
-        echo __('New_products');
+        echo 'Produkte der Woche';
     echo '</h2>';
 
+    echo '<div class="products-carousel">';
+        echo '<button type="button" class="products-nav products-nav-prev" aria-label="zurück" onclick="document.querySelector(\'.products-wrapper\').scrollBy({left: -320, behavior: \'smooth\'})">&#8249;</button>';
     echo '<div class="products-wrapper">';
         foreach ($newProducts as $product) {
-            echo $this->element('catalog/product', [
-                'product' => $product,
-                'showProductDetailLink' => true,
-                'showManufacturerDetailLink' => true,
-                'showIsNewBadgeAsLink' => true
-            ],
-            [
-                'cache' => [
-                    'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request),
-                ],
-            ]
-            );
+            $imageData = $this->Html->getProductImageSrcWithManufacturerImageFallback(!empty($product->image) ? (int) $product->image->id_image : 0, (int) $product->id_manufacturer);
+            $detailUrl = $this->Slug->getProductDetail($product->id_product, $product->name);
+            echo '<div class="pw home-product-card">';
+                echo '<a class="home-product-image" href="' . h($detailUrl) . '">';
+                    echo '<img src="' . h($imageData['productImageSrc']) . '" alt="' . h($product->name) . '" loading="lazy" />';
+                echo '</a>';
+                echo '<div class="home-product-body">';
+                    echo '<a class="home-product-name" href="' . h($detailUrl) . '">' . h($product->name) . '</a>';
+                    $priceValue = (float) ($product->selling_prices['gross_price'] ?? $product->gross_price);
+            $pricePrefix = '';
+            $priceSuffix = '';
+            if (!empty($product->product_attributes)) {
+                $variantPrices = [];
+                $variantPerUnit = [];
+                foreach ($product->product_attributes as $attribute) {
+                    $variantPrice = (float) ($attribute->selling_prices['gross_price'] ?? $attribute->gross_price);
+                    if ($variantPrice > 0) {
+                        $variantPrices[] = $variantPrice;
+                    } elseif (!empty($attribute->selling_prices['price_incl_per_unit'])) {
+                        // Gewichtsware: nur Preis pro Kilo hinterlegt
+                        $variantPerUnit[] = (float) $attribute->selling_prices['price_incl_per_unit'];
+                    }
+                }
+                if (!empty($variantPrices)) {
+                    $priceValue = min($variantPrices);
+                } elseif (!empty($variantPerUnit)) {
+                    $priceValue = min($variantPerUnit);
+                    $pricePrefix = '';
+                    $priceSuffix = ' /kg';
+                }
+                $pricePrefix = '';
+            }
+            echo '<div class="home-product-price">' . h($pricePrefix . $this->Number->formatAsCurrency($priceValue) . $priceSuffix) . '</div>';
+                echo '</div>';
+            echo '</div>';
         }
+    echo '</div>';
+        echo '<button type="button" class="products-nav products-nav-next" aria-label="weiter" onclick="document.querySelector(\'.products-wrapper\').scrollBy({left: 320, behavior: \'smooth\'})">&#8250;</button>';
     echo '</div>';
 }
 

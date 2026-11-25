@@ -126,6 +126,10 @@ class SlugHelper extends Helper
      */
     public function getPagePath(object $page): string
     {
+        // Externe Adresse (z. B. Blog -> /blog-archiv) hat Vorrang
+        if (!empty($page->extern_url)) {
+            return $page->extern_url;
+        }
         if (!empty($page->slug)) {
             return '/' . $page->slug;
         }
