@@ -660,6 +660,14 @@ foodcoopshop.Helper = {
             activeEntityWrapper.addClass('active');
             activeEntityWrapper.show();
         });
+
+        // Kachelansicht: Varianten-Auswahl per Select (ersetzt die Radio-Liste bei mehreren Varianten)
+        $('select.t-variant-select').on('change', function () {
+            var entityWrappers = $(this).closest('.pw').find('.ew');
+            entityWrappers.hide().removeClass('active');
+            // inline display entfernen, damit die CSS-Regel fuer .ew.active (display: contents in Kacheln) greift
+            $('#ew-' + $(this).val()).addClass('active').css('display', '');
+        });
     },
 
     addSpinnerToButton: function (button, iconClass) {

@@ -34,13 +34,17 @@ echo '</div>';
 
 echo '<div class="descriptions">';
     if ($isTile) {
-        // Kurztext in fester Zone (max. 4 Zeilen), damit Menge und Warenkorb in jeder Kachel auf gleicher Hoehe liegen
-        echo '<div class="t-short">' . $product->description_short . '</div>';
-    } elseif ($product->description_short != '') {
-        echo $product->description_short.'<br />';
+        // Kurztext wird per CSS auf 2 Zeilen begrenzt; der Langtext bleibt der Produktdetailseite vorbehalten
+        if ($product->description_short != '') {
+            echo '<div class="t-short">' . $product->description_short . '</div>';
+        }
+    } else {
+        if ($product->description_short != '') {
+            echo $product->description_short.'<br />';
+        }
     }
 
-    if ($product->description != '') {
+    if (!$isTile && $product->description != '') {
         echo $this->Html->link(
             '<i class="fa"></i> '.__('Show_more'),
             'javascript:void(0);',

@@ -90,9 +90,8 @@ foreach ($preparedProductAttributes as $attribute) {
 
         echo '<div class="tax">'. $this->Number->formatAsCurrency($attribute->calculated_tax) . '</div>';
         echo '</div>';
-        if ($isTile) {
-            // Platzhalter immer ausgeben, damit die Zonenhoehe in jeder Kachel gleich ist
-            echo '<div class="t-grund">' . ($pricePerUnitInfoText ?? '') . '</div>';
+        if ($isTile && $pricePerUnitInfoText != '') {
+            echo '<div class="t-grund">' . $pricePerUnitInfoText . '</div>';
         }
     } else {
         // Cart.js::initAddToCartButton() needs the following elements!
@@ -147,28 +146,47 @@ foreach ($preparedProductAttributes as $attribute) {
     echo '</div>';
 }
 
-// radio buttons for changing attributes
-if ($isTile) {
+// variant selection: in tiles with more than one variant a select box replaces the radio list
+$useVariantSelect = $isTile && count($preparedProductAttributes) > 1;
+if ($useVariantSelect) {
     echo '<div class="t-variants">';
-}
-foreach ($preparedProductAttributes as $attribute) {
-
-    $radioButtonLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
-        $attribute->product_attribute_combination->attribute->name,
-        $attribute->product_attribute_combination->attribute->can_be_used_as_unit,
-        $attribute->unit_product_attribute->price_per_unit_enabled,
-        $attribute->unit_product_attribute->quantity_in_units,
-        $attribute->unit_product_attribute->name,
-        );
-
-    echo '<div class="radio">
-              <label class="attribute-button" id="'.'attribute-button-'.$attribute->id_product_attribute.'">
-                  <input type="radio" name="product-'.$product->id_product.'" '.($attribute->checked ? 'checked' : '').'>'.
-                  $radioButtonLabel.'
-              </label>
-          </div>';
-
-}
-if ($isTile) {
+    echo '<select class="t-variant-select no-tom-select" aria-label="' . h(__('Variant')) . '">';
+    foreach ($preparedProductAttributes as $attribute) {
+        $selectLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
+            $attribute->product_attribute_combination->attribute->name,
+            $attribute->product_attribute_combination->attribute->can_be_used_as_unit,
+            $attribute->unit_product_attribute->price_per_unit_enabled,
+            $attribute->unit_product_attribute->quantity_in_units,
+            $attribute->unit_product_attribute->name,
+            );
+        echo '<option value="' . $attribute->id_product_attribute . '"' . ($attribute->checked ? ' selected' : '') . '>' . h(trim(strip_tags($selectLabel))) . '</option>';
+    }
+    echo '</select>';
     echo '</div>';
+} else {
+    // radio buttons for changing attributes
+    if ($isTile && !empty($preparedProductAttributes)) {
+        echo '<div class="t-variants">';
+    }
+    foreach ($preparedProductAttributes as $attribute) {
+
+        $radioButtonLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
+            $attribute->product_attribute_combination->attribute->name,
+            $attribute->product_attribute_combination->attribute->can_be_used_as_unit,
+            $attribute->unit_product_attribute->price_per_unit_enabled,
+            $attribute->unit_product_attribute->quantity_in_units,
+            $attribute->unit_product_attribute->name,
+            );
+
+        echo '<div class="radio">
+                  <label class="attribute-button" id="'.'attribute-button-'.$attribute->id_product_attribute.'">
+                      <input type="radio" name="product-'.$product->id_product.'" '.($attribute->checked ? 'checked' : '').'>'.
+                      $radioButtonLabel.'
+                  </label>
+              </div>';
+
+    }
+    if ($isTile && !empty($preparedProductAttributes)) {
+        echo '</div>';
+    }
 }

@@ -239,6 +239,10 @@ foodcoopshop.Cart = {
                 // use attribute label as unity
                 unity = productWrapper.find('input[type="radio"]:checked').parent().text().trim();
             }
+            if (unity === '' && productWrapper.find('select.t-variant-select').length > 0) {
+                // Kachelansicht mit Varianten-Select
+                unity = productWrapper.find('select.t-variant-select option:selected').text().trim();
+            }
 
             if (amount > 1) {
                 var approxRegExp = new RegExp(__('approx.'));
