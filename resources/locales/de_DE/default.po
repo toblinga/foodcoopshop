@@ -768,6 +768,12 @@ msgstr "nur für uneingeloggte User"
 msgid "Blog_archive"
 msgstr "Blog-Archiv"
 
+msgid "Category_general"
+msgstr "Allgemein"
+
+msgid "Category_recipe"
+msgstr "Rezept"
+
 msgid "Info text"
 msgstr "Info-Text"
 
@@ -5994,3 +6000,6 @@ msgstr "Individueller Bestellschluss"
 msgid "Bulk_orders"
 msgstr "Sammelbestellungen"
 
+
+msgid "Matching_posts_and_recipes"
+msgstr "Passende Beiträge und Rezepte"

@@ -1498,6 +1498,17 @@ a.blog-post-wrapper span.date {
     right: 10px;
     font-style: italic;
 }
+a.blog-post-wrapper span.blog-category {
+    font-size: 12px;
+    line-height: 16px;
+    color: #777;
+    margin-bottom: 2px;
+}
+p.blog-category {
+    font-size: 12px;
+    color: #777;
+    margin: 0 0 8px 0;
+}
 a.blog-post-wrapper span.img-wrapper {
     float: none;
     display: flex;

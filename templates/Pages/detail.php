@@ -38,16 +38,25 @@ if ($srcLargeImage != '') {
 echo '<h1>'.$page->title.'</h1>';
 
 if (!empty($page['children'])) {
+    // Zeichnungen je Unterseite (ID => Datei), wie auf lieblingsspeis.at
+    $childDrawings = [
+        192 => 'eu-organic-logo-600x400-1.png',
+        229 => 'cropped-Scheibtruhe-150x150.png',
+        156 => 'cropped-Fahrrad-150x150.png',
+        237 => 'cropped-Pflanze-150x150.png',
+        4107 => 'cropped-Abholen-150x150.png',
+    ];
+    echo '<div class="page-tiles">';
     foreach ($page['children'] as $childPage) {
-        echo '<p>'.$this->Html->link(
-            $childPage->title,
-            $this->Slug->getPageDetail($childPage->id_page, $childPage->title),
-            [
-                'class' => 'btn btn-outline-light',
-                'escape' => false
-            ]
-        ).'</p>';
+        $drawing = $childDrawings[(int) $childPage->id_page] ?? null;
+        echo '<a class="page-tile" href="' . h($this->Slug->getPagePath($childPage)) . '">';
+            if ($drawing !== null) {
+                echo '<span class="page-tile-image"><img src="/files/lieblingsspeis/zeichnungen/' . $drawing . '" alt="" loading="lazy" /></span>';
+            }
+            echo '<span class="page-tile-title">' . h($childPage->title) . '</span>';
+        echo '</a>';
     }
+    echo '</div>';
 }
 
 if ($identity !== null) {

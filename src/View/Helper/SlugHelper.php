@@ -121,6 +121,21 @@ class SlugHelper extends Helper
         return '/'.__('route_manufacturer_detail').'/'.$manufacturerId.'-'.StringComponent::slugify($manufacturerName);
     }
 
+    /**
+     * Neue Adresse einer Seite (z. B. /ueber-uns/darum-bio). Ohne Adresse: alte Adresse mit ID.
+     */
+    public function getPagePath(object $page): string
+    {
+        // Externe Adresse (z. B. Blog -> /blog-archiv) hat Vorrang
+        if (!empty($page->extern_url)) {
+            return $page->extern_url;
+        }
+        if (!empty($page->slug)) {
+            return '/' . $page->slug;
+        }
+        return $this->getPageDetail((int) $page->id_page, (string) $page->title);
+    }
+
     public function getPageDetail(int $pageId, string $name): string
     {
         return '/'.__('route_content').'/'.$pageId.'-'.StringComponent::slugify($name);
@@ -397,6 +412,16 @@ class SlugHelper extends Helper
     public function getBlogList(): string
     {
         return '/'.__('route_news_list');
+    }
+
+    public function getBlogTag(int $blogTagId, string $name): string
+    {
+        return '/'.__('route_news_list') . '/stichwort/' . $blogTagId . '-' . StringComponent::slugify($name);
+    }
+
+    public function getBlogCategory(int $blogCategoryId, string $name): string
+    {
+        return '/'.__('route_news_list') . '/kategorie/' . $blogCategoryId . '-' . StringComponent::slugify($name);
     }
 
     public function getBlogPostDetail(int $blogPostId, string $name): string

@@ -24,6 +24,7 @@ $this->element('addScript', ['script' =>
     Configure::read('app.jsNamespace') . ".Admin.init();" .
     Configure::read('app.jsNamespace') . ".Editor.initBig('blogposts-content');" .
     Configure::read('app.jsNamespace') . ".Upload.initImageUpload('body.blog_posts .add-image-button', foodcoopshop.Upload.saveBlogPostTmpImageInForm);" .
+    Configure::read('app.jsNamespace') . ".BlogPostMapping.init();" .
     Configure::read('app.jsNamespace') . ".Admin.initForm();
     "
 ]);
@@ -103,15 +104,47 @@ echo '<div class="warning">';
     ]);
 echo '</div>';
 
-if (Configure::read('app.showManufacturerListAndDetailPage') && ($identity->isSuperadmin() || $identity->isAdmin())) {
-    echo $this->Form->control('BlogPosts.id_manufacturer', [
+if (Configure::read('app.showManufacturerListAndDetailPage') && ($identity->isSuperadmin() || $identity->isAdmin() || $identity->isManufacturer())) {
+    echo $this->Form->control('BlogPosts.supplier_product_ids', [
         'type' => 'select',
-        'label' => __('Manufacturer'),
-        'empty' => __('Chose_manufacturer'),
-        'options' => $manufacturersForDropdown
+        'multiple' => true,
+        'label' => 'Lieferanten & Produkte',
+        'options' => $selectedSupplierProducts,
+        'value' => array_keys($selectedSupplierProducts),
+        'class' => 'blog-post-mapping no-tom-select',
+        'data-mapping' => 'supplier-product',
+        'data-search-url' => $this->Url->build(['plugin' => 'Admin', 'controller' => 'BlogPosts', 'action' => 'searchTargets']),
+        'data-placeholder' => 'Lieferant oder Produkt suchen ...',
     ]);
-    echo '<span class="description small">'.__('Blog_post_manufacturer_description') . '</span>';
+    if (!$identity->isManufacturer()) {
+        echo '<div class="input"><label></label><button type="button" class="btn btn-outline-light add-all-products-of-manufacturer"><i class="fas fa-plus"></i> Alle Produkte des ersten gewählten Lieferanten übernehmen</button></div>';
+    }
+    echo '<span class="description small">Wird ein Produkt gewählt, wird sein Lieferant automatisch mit zugeordnet.</span>';
 }
+
+echo $this->Form->control('BlogPosts.category_ids', [
+    'type' => 'select',
+    'multiple' => true,
+    'label' => 'Kategorien',
+    'options' => $categoryOptions,
+    'value' => $selectedCategoryIds,
+    'class' => 'blog-post-mapping no-tom-select',
+    'data-mapping' => 'category',
+    'data-placeholder' => 'Kategorie wählen ...',
+]);
+echo '<span class="description small">Unterkategorien werden als Baum angezeigt, z. B. Rezepte › Hauptspeise.</span>';
+
+echo $this->Form->control('BlogPosts.tag_values', [
+    'type' => 'select',
+    'multiple' => true,
+    'label' => 'Stichwörter',
+    'options' => $selectedTags,
+    'value' => array_keys($selectedTags),
+    'class' => 'blog-post-mapping no-tom-select',
+    'data-mapping' => 'tag',
+    'data-search-url' => $this->Url->build(['plugin' => 'Admin', 'controller' => 'BlogPosts', 'action' => 'searchTargets']),
+    'data-placeholder' => 'Stichwort suchen oder neu eingeben ...',
+]);
 
 echo $this->Form->control('BlogPosts.show_on_start_page_until', [
     'class' => 'datepicker',

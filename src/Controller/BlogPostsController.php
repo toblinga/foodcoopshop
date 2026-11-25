@@ -32,7 +32,59 @@ class BlogPostsController extends FrontendController
         $this->Authentication->allowUnauthenticated([
             'index',
             'detail',
+            'category',
+            'tag',
         ]);
+    }
+
+    public function tag(): ?Response
+    {
+        $idAndSlug = (string) $this->getRequest()->getParam('idAndSlug');
+        $tagId = (int) $idAndSlug;
+
+        $blogTag = TableRegistry::getTableLocator()->get('BlogTags')->find()
+            ->where(['id_blog_tag' => $tagId, 'active' => APP_ON])
+            ->first();
+        if (empty($blogTag)) {
+            throw new RecordNotFoundException('blog tag not found');
+        }
+
+        $correctSlug = StringComponent::slugify($blogTag->name);
+        $givenSlug = StringComponent::removeIdFromSlug($idAndSlug);
+        if ($correctSlug != $givenSlug) {
+            return $this->redirect(Configure::read('app.slugHelper')->getBlogTag($tagId, $blogTag->name));
+        }
+
+        $this->set('blogPosts', TableRegistry::getTableLocator()->get('BlogPosts')->findBlogPostsByTag($tagId));
+        $this->set('blogTag', $blogTag);
+        $this->set('title_for_layout', $blogTag->name);
+        return null;
+    }
+
+    public function category(): ?Response
+    {
+        $idAndSlug = (string) $this->getRequest()->getParam('idAndSlug');
+        $categoryId = (int) $idAndSlug;
+
+        $blogCategoriesTable = TableRegistry::getTableLocator()->get('BlogCategories');
+        $blogCategory = $blogCategoriesTable->find()
+            ->where(['id_blog_category' => $categoryId, 'active' => APP_ON])
+            ->first();
+        if (empty($blogCategory)) {
+            throw new RecordNotFoundException('blog category not found');
+        }
+
+        $correctSlug = StringComponent::slugify($blogCategory->name);
+        $givenSlug = StringComponent::removeIdFromSlug($idAndSlug);
+        if ($correctSlug != $givenSlug) {
+            return $this->redirect(Configure::read('app.slugHelper')->getBlogCategory($categoryId, $blogCategory->name));
+        }
+
+        $blogPostsTable = TableRegistry::getTableLocator()->get('BlogPosts');
+        $this->set('blogPosts', $blogPostsTable->findBlogPostsByCategory($categoryId));
+        $this->set('blogCategory', $blogCategory);
+        $this->set('title_for_layout', $blogCategory->name);
+        return null;
     }
 
     public function detail(): ?Response
@@ -62,6 +114,9 @@ class BlogPostsController extends FrontendController
             return $this->redirect(Configure::read('app.slugHelper')->getBlogPostDetail($blogPostId, $blogPost->title));
         }
 
+        $blogCategoriesTable = TableRegistry::getTableLocator()->get('BlogCategories');
+        $this->set('blogCategories', $blogCategoriesTable->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? []);
+        $this->set('blogTags', TableRegistry::getTableLocator()->get('BlogTags')->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? []);
         $this->set('blogPost', $blogPost);
 
         // START find neighbors
@@ -87,6 +142,19 @@ class BlogPostsController extends FrontendController
             'next' => $nextBlogPost->first(),
         ];
         $this->set('neighbors', $neighbors);
+
+        // drei zufällige andere Beiträge am Ende der Seite
+        $randomQuery = $blogPostsTable->find()
+            ->where([
+                $blogPostsTable->aliasField('active') => APP_ON,
+                $blogPostsTable->aliasField('id_blog_post !=') => $blogPost->id_blog_post,
+            ])
+            ->orderBy(['RAND()'])
+            ->limit(6);
+        if ($this->identity === null) {
+            $randomQuery->where([$blogPostsTable->aliasField('is_private') => APP_OFF]);
+        }
+        $this->set('randomBlogPosts', $randomQuery->all());
 
         $this->set('title_for_layout', $blogPost->title);
         return null;

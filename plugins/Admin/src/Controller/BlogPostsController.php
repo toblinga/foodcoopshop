@@ -79,11 +79,55 @@ class BlogPostsController extends AdminAppController
     private function _processForm(BlogPost $blogPost, bool $isEditMode): ?Response
     {
         $blogPostsTable = $this->getTableLocator()->get('BlogPosts');
+        $productsTable = $this->getTableLocator()->get('Products');
         $this->setFormReferer();
         $this->set('isEditMode', $isEditMode);
 
         $manufacturersTable = $this->getTableLocator()->get('Manufacturers');
         $this->set('manufacturersForDropdown', $manufacturersTable->getForDropdown());
+
+        $productsTable = $this->getTableLocator()->get('Products');
+        $selectedSupplierProducts = [];
+        $selectedTags = [];
+        if ($isEditMode && !empty($blogPost->id_blog_post)) {
+            $blogPostsTableForMapping = $this->getTableLocator()->get('BlogPosts');
+            $manufacturerIdsForForm = $blogPostsTableForMapping->getMappedManufacturerIds((int) $blogPost->id_blog_post);
+            $productIdsForForm = $blogPostsTableForMapping->getMappedProductIds((int) $blogPost->id_blog_post);
+            if (!empty($manufacturerIdsForForm)) {
+                $manufacturerNames = $manufacturersTable->find('list', keyField: 'id_manufacturer', valueField: 'name')
+                    ->where(['id_manufacturer IN' => $manufacturerIdsForForm])
+                    ->all()->toArray();
+                foreach ($manufacturerNames as $idManufacturer => $name) {
+                    $selectedSupplierProducts['m:' . $idManufacturer] = 'Lieferant: ' . $name;
+                }
+            }
+            if (!empty($productIdsForForm)) {
+                $products = $productsTable->find()
+                    ->select(['Products.id_product', 'Products.name', 'Manufacturers.name'])
+                    ->contain(['Manufacturers'])
+                    ->where(['Products.id_product IN' => $productIdsForForm])
+                    ->all();
+                foreach ($products as $product) {
+                    $manufacturerName = $product->hasValue('manufacturer') ? $product->manufacturer->name : '';
+                    $selectedSupplierProducts['p:' . $product->id_product] = 'Produkt: ' . $product->name . ($manufacturerName !== '' ? ' (' . $manufacturerName . ')' : '');
+                }
+            }
+            foreach ($this->getTableLocator()->get('BlogTags')->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? [] as $tag) {
+                $selectedTags[$tag['id']] = $tag['name'];
+            }
+        }
+        $this->set('selectedSupplierProducts', $selectedSupplierProducts);
+        $this->set('selectedTags', $selectedTags);
+
+        $blogCategoriesTable = $this->getTableLocator()->get('BlogCategories');
+        $categoryOptions = [];
+        foreach ($blogCategoriesTable->getAllAsTree() as $category) {
+            $categoryOptions[$category['id']] = $category['path'];
+        }
+        $this->set('categoryOptions', $categoryOptions);
+        $this->set('selectedCategoryIds', ($isEditMode && !empty($blogPost->id_blog_post))
+            ? $blogCategoriesTable->getMappedIds((int) $blogPost->id_blog_post)
+            : []);
 
         $_SESSION['ELFINDER'] = [
             'uploadUrl' => Configure::read('App.fullBaseUrl') . "/files/kcfinder/blog_posts",
@@ -101,9 +145,35 @@ class BlogPostsController extends AdminAppController
 
         $this->setRequest($this->getRequest()->withData('BlogPosts.id_customer', $this->identity->getId()));
 
-        if ($this->identity->isManufacturer()) {
-            $this->setRequest($this->getRequest()->withData('BlogPosts.id_manufacturer', $this->identity->getManufacturerId()));
+        $manufacturerIds = [];
+        $productIds = [];
+        foreach ((array) $this->getRequest()->getData('BlogPosts.supplier_product_ids', []) as $value) {
+            $value = (string) $value;
+            if (str_starts_with($value, 'm:')) {
+                $manufacturerIds[] = (int) substr($value, 2);
+            } elseif (str_starts_with($value, 'p:')) {
+                $productIds[] = (int) substr($value, 2);
+            }
         }
+        if ($this->identity->isManufacturer()) {
+            $ownManufacturerId = (int) $this->identity->getManufacturerId();
+            $manufacturerIds = [$ownManufacturerId];
+            // Hersteller duerfen nur eigene Produkte zuordnen
+            $productIds = $productsTable->find()
+                ->select(['id_product'])
+                ->where(['id_manufacturer' => $ownManufacturerId, 'id_product IN' => $productIds ?: [0]])
+                ->all()->extract('id_product')->toList();
+        } elseif (!empty($productIds)) {
+            // Lieferant eines gewaehlten Produkts wird automatisch mitgesetzt
+            $implicitManufacturers = $productsTable->find()
+                ->select(['id_manufacturer'])
+                ->where(['id_product IN' => $productIds])
+                ->all()->extract('id_manufacturer')->toList();
+            $manufacturerIds = array_merge($manufacturerIds, array_map('intval', $implicitManufacturers));
+        }
+        $categoryIds = (array) $this->getRequest()->getData('BlogPosts.category_ids', []);
+        $tagValues = (array) $this->getRequest()->getData('BlogPosts.tag_values', []);
+        // Hauptlieferant (fuer Standardbild-Fallback) = erster gewaehlter Lieferant
 
         if (!$this->getRequest()->getData('BlogPosts.update_modified_field') && !$this->identity->isManufacturer() && $isEditMode) {
             $blogPostsTable->removeBehavior('Timestamp');
@@ -121,6 +191,11 @@ class BlogPostsController extends AdminAppController
             return $this->render('edit');
         } else {
             $blogPost = $blogPostsTable->save($blogPost);
+            if ($blogPost) {
+                $blogPostsTable->saveMappings((int) $blogPost->id_blog_post, $manufacturerIds, $productIds);
+                $this->getTableLocator()->get('BlogCategories')->saveMappings((int) $blogPost->id_blog_post, $categoryIds);
+                $this->getTableLocator()->get('BlogTags')->saveMappings((int) $blogPost->id_blog_post, $tagValues);
+            }
 
             if (!$isEditMode) {
                 $messageSuffix = __('created');
@@ -154,6 +229,88 @@ class BlogPostsController extends AdminAppController
             return $this->redirect($this->getPreparedReferer());
         }
 
+    }
+
+    /**
+     * JSON-Suche für die Chip-Felder (Lieferanten und Produkte) im Blogbeitrag-Formular
+     */
+    public function searchTargets(): Response
+    {
+        $this->getRequest()->allowMethod(['get']);
+        $type = (string) $this->getRequest()->getQuery('type');
+        $term = trim((string) $this->getRequest()->getQuery('q'));
+        $manufacturerId = (int) $this->getRequest()->getQuery('manufacturer_id');
+        $items = [];
+
+        if ($type === 'manufacturer') {
+            $query = $this->getTableLocator()->get('Manufacturers')->find()
+                ->select(['id_manufacturer', 'name']);
+            if ($this->identity->isManufacturer()) {
+                $query->where(['id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+            }
+            if ($term !== '') {
+                $query->where(['name LIKE' => '%' . $term . '%']);
+            }
+            foreach ($query->orderBy(['name' => 'ASC'])->limit(30)->all() as $manufacturer) {
+                $items[] = ['value' => (int) $manufacturer->id_manufacturer, 'text' => $manufacturer->name];
+            }
+        } elseif ($type === 'supplier-product') {
+            $manufacturerQuery = $this->getTableLocator()->get('Manufacturers')->find()
+                ->select(['id_manufacturer', 'name']);
+            $productQuery = $this->getTableLocator()->get('Products')->find()
+                ->select(['Products.id_product', 'Products.name', 'Manufacturers.name'])
+                ->contain(['Manufacturers'])
+                ->where(['Products.active' => APP_ON]);
+            if ($this->identity->isManufacturer()) {
+                $manufacturerQuery->where(['id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+                $productQuery->where(['Products.id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+            }
+            if ($term !== '') {
+                $manufacturerQuery->where(['name LIKE' => '%' . $term . '%']);
+                $productQuery->where(['Products.name LIKE' => '%' . $term . '%']);
+            }
+            foreach ($manufacturerQuery->orderBy(['name' => 'ASC'])->limit(10)->all() as $manufacturer) {
+                $items[] = ['value' => 'm:' . (int) $manufacturer->id_manufacturer, 'text' => 'Lieferant: ' . $manufacturer->name];
+            }
+            foreach ($productQuery->orderBy(['Products.name' => 'ASC'])->limit(30)->all() as $product) {
+                $manufacturerName = $product->hasValue('manufacturer') ? $product->manufacturer->name : '';
+                $items[] = ['value' => 'p:' . (int) $product->id_product, 'text' => 'Produkt: ' . $product->name . ($manufacturerName !== '' ? ' (' . $manufacturerName . ')' : '')];
+            }
+        } elseif ($type === 'tag') {
+            $tagQuery = $this->getTableLocator()->get('BlogTags')->find()
+                ->select(['id_blog_tag', 'name'])
+                ->where(['active' => APP_ON]);
+            if ($term !== '') {
+                $tagQuery->where(['name LIKE' => '%' . $term . '%']);
+            }
+            foreach ($tagQuery->orderBy(['name' => 'ASC'])->limit(30)->all() as $tag) {
+                $items[] = ['value' => (int) $tag->id_blog_tag, 'text' => $tag->name];
+            }
+        } elseif ($type === 'product') {
+            $query = $this->getTableLocator()->get('Products')->find()
+                ->select(['Products.id_product', 'Products.name', 'Manufacturers.name'])
+                ->contain(['Manufacturers'])
+                ->where(['Products.active' => APP_ON]);
+            if ($this->identity->isManufacturer()) {
+                $query->where(['Products.id_manufacturer' => (int) $this->identity->getManufacturerId()]);
+            }
+            if ($manufacturerId > 0) {
+                $query->where(['Products.id_manufacturer' => $manufacturerId]);
+            }
+            if ($term !== '') {
+                $query->where(['Products.name LIKE' => '%' . $term . '%']);
+            }
+            $limit = $manufacturerId > 0 && $term === '' ? 1000 : 50;
+            foreach ($query->orderBy(['Products.name' => 'ASC'])->limit($limit)->all() as $product) {
+                $manufacturerName = $product->hasValue('manufacturer') ? $product->manufacturer->name : '';
+                $items[] = [
+                    'value' => (int) $product->id_product,
+                    'text' => $product->name . ($manufacturerName !== '' ? ' (' . $manufacturerName . ')' : ''),
+                ];
+            }
+        }
+
+        return $this->response->withType('application/json')->withStringBody((string) json_encode($items));
     }
 
     public function index(): void

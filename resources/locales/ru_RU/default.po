@@ -730,6 +730,12 @@ msgstr "BIC"
 msgid "Blog_archive"
 msgstr "Архив блога"
 
+msgid "Category_general"
+msgstr "Общее"
+
+msgid "Category_recipe"
+msgstr "Рецепт"
+
 msgid "Blog_post_manufacturer_description"
 msgstr "Если производители видимы только для зарегистрированным покупателям, это так же относится и к блог постам (игнорируются в настройках для блог поста)."
 
@@ -5295,3 +5301,6 @@ msgstr "{0} {1} не может быть связан."
 
 msgid "{0}_{1}_was_successfully_associated."
 msgstr "{0} {1} был успешно связан."
+
+msgid "Matching_posts_and_recipes"
+msgstr "Подходящие статьи и рецепты"

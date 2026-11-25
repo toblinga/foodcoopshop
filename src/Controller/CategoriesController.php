@@ -167,7 +167,8 @@ class CategoriesController extends FrontendController
 
         $correctSlug = StringComponent::slugify($category->name);
         $givenSlug = StringComponent::removeIdFromSlug($this->getRequest()->getParam('idAndSlug'));
-        if ($correctSlug != $givenSlug) {
+        // /shop bleibt als Adresse bestehen (kein Redirect auf /kategorie/...)
+        if ($correctSlug != $givenSlug && !$this->getRequest()->getParam('shop')) {
             return $this->redirect(Configure::read('app.slugHelper')->getCategoryDetail($categoryId, $category->name));
         }
 

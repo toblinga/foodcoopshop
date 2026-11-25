@@ -18,4 +18,12 @@ namespace App\Model\Entity;
  */
 class BlogPost extends AppEntity
 {
+    /**
+     * Rezept, wenn der Inhalt den Abschnitt "Zutaten" enthaelt. Einzige Stelle fuer diese Erkennung.
+     */
+    public function isRecipe(): bool
+    {
+        return str_contains((string) $this->content, 'Zutaten');
+    }
+
 }
