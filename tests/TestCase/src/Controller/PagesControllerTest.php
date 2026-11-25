@@ -7,6 +7,7 @@ use App\Test\TestCase\AppCakeTestCase;
 use App\Test\TestCase\Traits\AppIntegrationTestTrait;
 use App\Test\TestCase\Traits\AssertPagesForErrorsTrait;
 use App\Test\TestCase\Traits\LoginTrait;
+use Cake\Core\Configure;
 
 /**
  * FoodCoopShop - The open source software for your foodcoop
@@ -246,6 +247,12 @@ class PagesControllerTest extends AppCakeTestCase
         $pageId = 3;
         $this->changePage($pageId, 1);
         $this->get($this->Slug->getPageDetail($pageId, 'Page'));
+        // alte Adresse /content/{id}-{slug} leitet dauerhaft (301) auf die neue Adresse weiter
+        $this->assertResponseCode(301);
+        $page = $this->getTableLocator()->get('Pages')->get($pageId);
+        $newAddress = Configure::read('app.slugHelper')->getPagePath($page);
+        $this->assertRedirect($newAddress);
+        $this->get($newAddress);
         $this->assertResponseCode(200);
     }
 
