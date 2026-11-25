@@ -62,6 +62,8 @@ class BlogPostsController extends FrontendController
             return $this->redirect(Configure::read('app.slugHelper')->getBlogPostDetail($blogPostId, $blogPost->title));
         }
 
+        $blogCategoriesTable = TableRegistry::getTableLocator()->get('BlogCategories');
+        $this->set('blogCategories', $blogCategoriesTable->getAssignedByBlogPostIds([(int) $blogPost->id_blog_post])[(int) $blogPost->id_blog_post] ?? []);
         $this->set('blogPost', $blogPost);
 
         // START find neighbors

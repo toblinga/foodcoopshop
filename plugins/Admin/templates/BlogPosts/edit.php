@@ -136,6 +136,18 @@ if (Configure::read('app.showManufacturerListAndDetailPage') && ($identity->isSu
     echo '<span class="description small">'.__('Blog_post_manufacturer_description') . '</span>';
 }
 
+echo $this->Form->control('BlogPosts.category_ids', [
+    'type' => 'select',
+    'multiple' => true,
+    'label' => 'Kategorien',
+    'options' => $categoryOptions,
+    'value' => $selectedCategoryIds,
+    'class' => 'blog-post-mapping',
+    'data-mapping' => 'category',
+    'data-placeholder' => 'Kategorie wählen ...',
+]);
+echo '<span class="description small">Unterkategorien werden als Baum angezeigt, z. B. Rezepte › Hauptspeise.</span>';
+
 echo $this->Form->control('BlogPosts.show_on_start_page_until', [
     'class' => 'datepicker',
     'label' => __('Show_on_startpage_until'),

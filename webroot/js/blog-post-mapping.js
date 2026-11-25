@@ -26,9 +26,9 @@ foodcoopshop.BlogPostMapping = {
                 hideSelected: true,
                 preload: 'focus',
                 placeholder: element.getAttribute('data-placeholder') || '',
-                load: function (query, callback) {
+                load: element.getAttribute('data-search-url') ? function (query, callback) {
                     self.search(element, type, query, callback);
-                }
+                } : undefined
             });
         });
 

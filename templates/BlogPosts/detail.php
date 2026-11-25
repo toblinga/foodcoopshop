@@ -39,7 +39,18 @@ if ($blogPost->short_description != '') {
     echo '<p><b>'.$blogPost->short_description.'</b></p>';
 }
 
-    echo '<p class="blog-category ' . $blogPost->getCategoryCssClass() . '">' . h($blogPost->getCategoryLabel()) . '</p>';
+    if (!empty($blogCategories)) {
+        echo '<ul class="blog-category-tree">';
+        foreach ($blogCategories as $blogCategory) {
+            echo '<li>';
+            if ($blogCategory['icon'] !== '') {
+                echo '<i class="fas ' . h($blogCategory['icon']) . '"></i> ';
+            }
+            echo h($blogCategory['path']);
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
 
     $isRecipe = $blogPost->isRecipe();
     echo '<div class="content' . ($isRecipe ? ' is-recipe' : '') . '">';

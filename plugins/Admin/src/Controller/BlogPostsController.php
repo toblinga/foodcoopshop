@@ -107,6 +107,16 @@ class BlogPostsController extends AdminAppController
         $this->set('selectedManufacturers', $selectedManufacturers);
         $this->set('selectedProducts', $selectedProducts);
 
+        $blogCategoriesTable = $this->getTableLocator()->get('BlogCategories');
+        $categoryOptions = [];
+        foreach ($blogCategoriesTable->getAllAsTree() as $category) {
+            $categoryOptions[$category['id']] = $category['path'];
+        }
+        $this->set('categoryOptions', $categoryOptions);
+        $this->set('selectedCategoryIds', ($isEditMode && !empty($blogPost->id_blog_post))
+            ? $blogCategoriesTable->getMappedIds((int) $blogPost->id_blog_post)
+            : []);
+
         $_SESSION['ELFINDER'] = [
             'uploadUrl' => Configure::read('App.fullBaseUrl') . "/files/kcfinder/blog_posts",
             'uploadPath' => $_SERVER['DOCUMENT_ROOT'] . "/files/kcfinder/blog_posts"
@@ -134,6 +144,7 @@ class BlogPostsController extends AdminAppController
                 ->where(['id_manufacturer' => $ownManufacturerId, 'id_product IN' => array_map('intval', $productIds) ?: [0]])
                 ->all()->extract('id_product')->toList();
         }
+        $categoryIds = (array) $this->getRequest()->getData('BlogPosts.category_ids', []);
         // Hauptlieferant (fuer Standardbild-Fallback) = erster gewaehlter Lieferant
         $this->setRequest($this->getRequest()->withData('BlogPosts.id_manufacturer', (int) ($manufacturerIds[0] ?? 0)));
 
@@ -155,6 +166,7 @@ class BlogPostsController extends AdminAppController
             $blogPost = $blogPostsTable->save($blogPost);
             if ($blogPost) {
                 $blogPostsTable->saveMappings((int) $blogPost->id_blog_post, $manufacturerIds, $productIds);
+                $this->getTableLocator()->get('BlogCategories')->saveMappings((int) $blogPost->id_blog_post, $categoryIds);
             }
 
             if (!$isEditMode) {

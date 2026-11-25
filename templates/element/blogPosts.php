@@ -34,21 +34,36 @@ if (isset($style) && $style != '') {
     $style = '';
 }
 
+$blogPostList = is_array($blogPosts) ? $blogPosts : iterator_to_array($blogPosts, false);
+$categoriesByBlogPost = \Cake\ORM\TableRegistry::getTableLocator()->get('BlogCategories')
+    ->getAssignedByBlogPostIds(array_map(fn ($blogPost) => (int) $blogPost->id_blog_post, $blogPostList));
+
 echo '<div class="blog-wrapper"' . $style . '>';
-foreach ($blogPosts as $blogPost) {
+foreach ($blogPostList as $blogPost) {
+    $cardCategories = $categoriesByBlogPost[(int) $blogPost->id_blog_post] ?? [];
+    $cardIcon = $cardCategories[0]['icon'] ?? '';
+    $cardNames = array_map(fn ($category) => $category['name'], $cardCategories);
     echo '<a class="blog-post-wrapper swiper-slide" href="' . $this->Slug->getBlogPostDetail($blogPost->id_blog_post, $blogPost->title) . '">';
     echo '<span class="img-wrapper">';
     echo '<img class="blog-post-image lazyload" data-src="' . $this->Html->getBlogPostImageSrc($blogPost, 'single') . '" />';
     echo '</span>';
     echo '<span class="content">';
         echo '<h3>' . $blogPost->title . '</h3>';
-        echo '<span class="blog-category ' . $blogPost->getCategoryCssClass() . '">' . h($blogPost->getCategoryLabel()) . '</span>';
         if ($blogPost->short_description != '') {
             $contentText = $blogPost->short_description;
         } else {
             $contentText = Text::truncate(strip_tags($blogPost->content), 150);
         }
         echo '<span class="desc">' . $contentText . '</span>';
+        echo '<span class="blog-card-footer">';
+            echo '<span class="blog-card-categories">';
+            if ($cardIcon !== '') {
+                echo '<i class="fas ' . h($cardIcon) . '"></i> ';
+            }
+            echo h(implode(', ', $cardNames));
+            echo '</span>';
+            echo '<span class="blog-card-more">Weiterlesen &rarr;</span>';
+        echo '</span>';
     echo '</span>';
     echo '<span class="date">' . $blogPost->modified->i18nFormat(Configure::read('app.timeHelper')->getI18Format('DateNTimeShort')) . '</span>';
     echo '</a>';
