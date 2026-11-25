@@ -49,6 +49,11 @@ if (!empty($blogPosts) && $blogPosts->count() > 0) {
 }
 ?>
 
+<?php
+// Kachelansicht ist Standard; nur ein explizit gewaehltes Listen-Cookie schaltet zurueck
+$isTileView = $this->request->getCookie('fcsProductView') !== 'liste';
+?>
+
 <h1 class="middle-line">
     <span class="left"><?php echo $title_for_layout; ?></span>
     <span class="middle"></span>
@@ -59,6 +64,9 @@ if (!empty($blogPosts) && $blogPosts->count() > 0) {
                 'pagesCount' => $pagesCount,
                 'totalProductCount' => $totalProductCount,
                 'products' => $products,
+            ]);
+            echo $this->element('catalog/productViewSwitch', [
+                'isTileView' => $isTileView,
             ]);
         ?>
     </span>
@@ -82,17 +90,18 @@ if (!empty($category)) {
 
 echo $this->element('stockProductInListInfo');
 
-echo '<div class="products-wrapper">';
+echo '<div class="products-wrapper' . ($isTileView ? ' kacheln' : '') . '">';
     foreach ($products as $product) {
         echo $this->element('catalog/product', [
             'product' => $product,
             'showProductDetailLink' => true,
             'showManufacturerDetailLink' => true,
-            'showIsNewBadgeAsLink' => true
+            'showIsNewBadgeAsLink' => true,
+            'isTile' => $isTileView,
         ],
         [
             'cache' => [
-                'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request),
+                'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request) . ($isTileView ? '_tile' : ''),
             ],
         ]
         );

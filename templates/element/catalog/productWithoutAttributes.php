@@ -19,9 +19,11 @@ use App\Services\OrderCustomerService;
  * @link          https://www.foodcoopshop.com
  */
 
+$isTile = (bool) ($isTile ?? false);
+
 echo '<div class="ew active">';
 if ($showProductPrice) {
-    echo '<div class="line">';
+    echo '<div class="line' . ($isTile ? ' t-price' : '') . '">';
     $tooltip = __('Tax_rate') . ': ' . $this->Number->formatTaxRate($product->tax->rate) . '%';
     if ($identity === null || $identity->shopping_price != Customer::SELLING_PRICE) {
         $sellingPrice = $product->selling_prices['gross_price'];
@@ -47,6 +49,10 @@ if ($showProductPrice) {
     }
     echo '</div>';
     echo '<div class="tax">'. $this->Number->formatAsCurrency($product->calculated_tax) . '</div>';
+    // Kachel: kein Grundpreis mehr; bei Verrechnung nach Gewicht nur der kleine Hinweis
+    if ($isTile && $product->unit_product->price_per_unit_enabled) {
+        echo '<div class="t-weight">nach Gewicht</div>';
+    }
 } else {
     // Cart.js::initAddToCartButton() needs the following elements!
     echo '<div class="price hide">' . $this->Number->formatAsCurrency(0) . '</div>';
@@ -58,6 +64,7 @@ echo $this->element('catalog/hiddenProductIdField', ['productId' => $product->id
 echo $this->element('catalog/amountWrapper', [
     'product' => $product,
     'orderedTotalAmount' => $product->ordered_total_amount ?? null,
+    'showOrderedHint' => !$isTile,
     'stockAvailable' => $product->stock_available,
     'unitObject' => $product->unit_product,
     'hideAmountSelector' => $isStockProductOrderPossible || $isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck,
@@ -74,6 +81,12 @@ echo $this->element('catalog/cartButton', [
     'cartButtonLabel' => OrderCustomerService::isSelfServiceModeByUrl() ? __('Move_in_shopping_bag') : __('Move_in_cart'),
     'cartButtonIcon' => OrderCustomerService::isSelfServiceModeByUrl() ? 'fa-shopping-bag' : 'fa-cart-plus'
 ]);
+if ($isTile) {
+    echo $this->element('catalog/orderedProductsHint', [
+        'product' => $product,
+        'orderedTotalAmount' => $product->ordered_total_amount ?? null,
+    ]);
+}
 echo $this->element('catalog/notAvailableInfo', [
     'product' => $product,
     'stockAvailable' => $product->stock_available,
@@ -83,7 +96,7 @@ echo $this->element('catalog/includeStockProductsInOrdersWithDeliveryRhythmInfoT
     'keyword' => OrderCustomerService::isSelfServiceModeByUrl() ? $product->ProductIdentifier : null
 ]);
 
-if ($showProductPrice) {
+if ($showProductPrice && !$isTile) {
     echo $pricePerUnitInfoText;
 }
 echo $this->element('catalog/quantityInUnitsInputFieldForSelfService', [
@@ -104,5 +117,10 @@ if (!$isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck) {
     }   
 }
 if (!empty($unityStrings)) {
-    echo '<div class="unity">'.__('Unit').': <span class="value">' . join(', ', $unityStrings).'</span></div>';
+    if ($isTile) {
+        // Kachel: nur der Wert, ohne Beschriftung "Einheit:"
+        echo '<div class="unity"><span class="value">' . join(', ', $unityStrings).'</span></div>';
+    } else {
+        echo '<div class="unity">'.__('Unit').': <span class="value">' . join(', ', $unityStrings).'</span></div>';
+    }
 }

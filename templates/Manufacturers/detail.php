@@ -116,17 +116,25 @@ if (!OrderCustomerService::isOrderForDifferentCustomerMode() && !OrderCustomerSe
 echo $this->element('stockProductInListInfo');
 
 if (!empty($manufacturer['Products'])) {
-    echo '<div class="products-wrapper">';
+    // Kachelansicht ist Standard, Umschalter Liste/Kachel bleibt verfuegbar (wie in Kategorien)
+    $isTileView = $this->request->getCookie('fcsProductView') !== 'liste';
+    echo '<div class="product-view-switch-row" style="clear:both;text-align:right;margin-bottom:6px;">';
+        echo $this->element('catalog/productViewSwitch', [
+            'isTileView' => $isTileView,
+        ]);
+    echo '</div>';
+    echo '<div class="products-wrapper' . ($isTileView ? ' kacheln' : '') . '">';
         foreach ($manufacturer['Products'] as $product) {
             echo $this->element('catalog/product', [
                 'product' => $product,
                 'showProductDetailLink' => true,
                 'showManufacturerDetailLink' => true,
-                'showIsNewBadgeAsLink' => true
+                'showIsNewBadgeAsLink' => true,
+                'isTile' => $isTileView,
             ],
             [
                 'cache' => [
-                    'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request),
+                    'key' => $this->Html->buildElementProductCacheKey($product, $identity, $this->request) . ($isTileView ? '_tile' : ''),
                 ],
             ]
             );

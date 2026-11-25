@@ -19,6 +19,8 @@ use App\Services\OrderCustomerService;
  * @link          https://www.foodcoopshop.com
  */
 
+$isTile = (bool) ($isTile ?? false);
+
 // 1) kick attributes if not available
 $hasCheckedAttribute = false;
 $i = 0;
@@ -61,7 +63,7 @@ foreach ($preparedProductAttributes as $attribute) {
     }
     echo '<div class="'.join(' ', $entityClasses).'" id="ew-'.$attribute->id_product_attribute.'">';
     if ($showProductPrice) {
-        echo '<div class="line">';
+        echo '<div class="line' . ($isTile ? ' t-price' : '') . '">';
         $tooltip = __('Tax_rate') . ': ' . $this->Number->formatTaxRate($product->tax->rate) . '%';
         if ($identity === null || $identity->shopping_price != Customer::SELLING_PRICE) {
             $sellingPrice = $attribute->selling_prices['gross_price'];
@@ -88,6 +90,10 @@ foreach ($preparedProductAttributes as $attribute) {
 
         echo '<div class="tax">'. $this->Number->formatAsCurrency($attribute->calculated_tax) . '</div>';
         echo '</div>';
+        // Kachel: kein Grundpreis mehr; bei Verrechnung nach Gewicht nur der kleine Hinweis
+        if ($isTile && $attribute->unit_product_attribute->price_per_unit_enabled) {
+            echo '<div class="t-weight">nach Gewicht</div>';
+        }
     } else {
         // Cart.js::initAddToCartButton() needs the following elements!
         echo '<div class="price hide">' . $this->Number->formatAsCurrency(0) . '</div>';
@@ -99,6 +105,7 @@ foreach ($preparedProductAttributes as $attribute) {
         'stockAvailable' => $attribute->stock_available,
         'unitObject' => $attribute->unit_product_attribute,
         'orderedTotalAmount' => $attribute->ordered_total_amount ?? null,
+        'showOrderedHint' => !$isTile,
         'hideAmountSelector' => $isStockProductOrderPossible || (new ProductQuantityService())->isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck($product, $attribute->unit_product_attribute),
         'hideIsStockProductIcon' => OrderCustomerService::isSelfServiceModeByUrl(),
     ]);
@@ -113,6 +120,12 @@ foreach ($preparedProductAttributes as $attribute) {
         'cartButtonLabel' => OrderCustomerService::isSelfServiceModeByUrl() ? __('Move_in_shopping_bag') : __('Move_in_cart'),
         'cartButtonIcon' => OrderCustomerService::isSelfServiceModeByUrl() ? 'fa-shopping-bag' : 'fa-cart-plus'
     ]);
+    if ($isTile) {
+        echo $this->element('catalog/orderedProductsHint', [
+            'product' => $product,
+            'orderedTotalAmount' => $attribute->ordered_total_amount ?? null,
+        ]);
+    }
     echo $this->element('catalog/notAvailableInfo', [
         'product' => $product,
         'stockAvailable' => $attribute->stock_available
@@ -122,7 +135,7 @@ foreach ($preparedProductAttributes as $attribute) {
         'keyword' => OrderCustomerService::isSelfServiceModeByUrl() ? $product->ProductIdentifier : null
     ]);
 
-    if ($showProductPrice) {
+    if ($showProductPrice && !$isTile) {
         echo $pricePerUnitInfoText;
     }
 
@@ -134,22 +147,47 @@ foreach ($preparedProductAttributes as $attribute) {
     echo '</div>';
 }
 
-// radio buttons for changing attributes
-foreach ($preparedProductAttributes as $attribute) {
+// variant selection: in tiles with more than one variant a select box replaces the radio list
+$useVariantSelect = $isTile && count($preparedProductAttributes) > 1;
+if ($useVariantSelect) {
+    echo '<div class="t-variants">';
+    echo '<select class="t-variant-select no-tom-select" aria-label="' . h(__('Variant')) . '">';
+    foreach ($preparedProductAttributes as $attribute) {
+        $selectLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
+            $attribute->product_attribute_combination->attribute->name,
+            $attribute->product_attribute_combination->attribute->can_be_used_as_unit,
+            $attribute->unit_product_attribute->price_per_unit_enabled,
+            $attribute->unit_product_attribute->quantity_in_units,
+            $attribute->unit_product_attribute->name,
+            );
+        echo '<option value="' . $attribute->id_product_attribute . '"' . ($attribute->checked ? ' selected' : '') . '>' . h(trim(strip_tags($selectLabel))) . '</option>';
+    }
+    echo '</select>';
+    echo '</div>';
+} else {
+    // radio buttons for changing attributes
+    if ($isTile && !empty($preparedProductAttributes)) {
+        echo '<div class="t-variants">';
+    }
+    foreach ($preparedProductAttributes as $attribute) {
 
-    $radioButtonLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
-        $attribute->product_attribute_combination->attribute->name,
-        $attribute->product_attribute_combination->attribute->can_be_used_as_unit,
-        $attribute->unit_product_attribute->price_per_unit_enabled,
-        $attribute->unit_product_attribute->quantity_in_units,
-        $attribute->unit_product_attribute->name,
-        );
+        $radioButtonLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
+            $attribute->product_attribute_combination->attribute->name,
+            $attribute->product_attribute_combination->attribute->can_be_used_as_unit,
+            $attribute->unit_product_attribute->price_per_unit_enabled,
+            $attribute->unit_product_attribute->quantity_in_units,
+            $attribute->unit_product_attribute->name,
+            );
 
-    echo '<div class="radio">
-              <label class="attribute-button" id="'.'attribute-button-'.$attribute->id_product_attribute.'">
-                  <input type="radio" name="product-'.$product->id_product.'" '.($attribute->checked ? 'checked' : '').'>'.
-                  $radioButtonLabel.'
-              </label>
-          </div>';
+        echo '<div class="radio">
+                  <label class="attribute-button" id="'.'attribute-button-'.$attribute->id_product_attribute.'">
+                      <input type="radio" name="product-'.$product->id_product.'" '.($attribute->checked ? 'checked' : '').'>'.
+                      $radioButtonLabel.'
+                  </label>
+              </div>';
 
+    }
+    if ($isTile && !empty($preparedProductAttributes)) {
+        echo '</div>';
+    }
 }

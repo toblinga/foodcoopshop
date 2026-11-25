@@ -20,6 +20,8 @@ use App\Services\PickupDayExceptionService;
 use Cake\Core\Configure;
 use App\Services\OrderCustomerService;
 
+$isTile = (bool) ($isTile ?? false);
+
 echo '<div class="heading">';
     echo '<h4>';
     if ($showProductDetailLink) {
@@ -31,11 +33,18 @@ echo '<div class="heading">';
 echo '</div>';
 
 echo '<div class="descriptions">';
-    if ($product->description_short != '') {
-        echo $product->description_short.'<br />';
+    if ($isTile) {
+        // Kurztext wird per CSS auf 2 Zeilen begrenzt; der Langtext bleibt der Produktdetailseite vorbehalten
+        if ($product->description_short != '') {
+            echo '<div class="t-short">' . $product->description_short . '</div>';
+        }
+    } else {
+        if ($product->description_short != '') {
+            echo $product->description_short.'<br />';
+        }
     }
 
-    if ($product->description != '') {
+    if (!$isTile && $product->description != '') {
         echo $this->Html->link(
             '<i class="fa"></i> '.__('Show_more'),
             'javascript:void(0);',
@@ -49,7 +58,45 @@ echo '<div class="descriptions">';
     }
 echo '</div>';
 
-if (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
+if ($isTile) {
+    echo '<div class="t-pickup">';
+}
+
+if ($isTile && !Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY') && !OrderCustomerService::isOrderForDifferentCustomerMode() && !OrderCustomerService::isSelfServiceModeByUrl()) {
+    // Kachel: kurze Zeile "Abholung Fr 27.11." (ohne Jahr, ohne Rhythmus-Text), Chip bei spaeterer Periode
+    $tileMovedPickupDayInfo = '';
+    if ($product->delivery_rhythm_type != 'individual') {
+        $tileMovedPickupDayInfo = (new PickupDayExceptionService())->getMovedPickupDayInfo((string) $product->next_delivery_day);
+    }
+    $tileDeliveryBreak = $product->next_delivery_day == 'delivery-rhythm-triggered-delivery-break';
+    $tilePickupTs = $tileDeliveryBreak ? 0 : strtotime($product->next_delivery_day);
+    if (!$tileDeliveryBreak) {
+        $tileNextChip = '';
+        if ($tilePickupTs != (new DeliveryRhythmService())->getDeliveryDayByCurrentDay()) {
+            $tileWeeksAsFloat = ($tilePickupTs - strtotime(date($this->MyTime->getI18Format('DateShortAlt')))) / 24 / 60 / 60;
+            $tileFullWeeks = (int) ($tileWeeksAsFloat / 7);
+            $tileDays = (int) $tileWeeksAsFloat % 7;
+            // kurzer Chip: "+1 Wo" bzw. bei weniger als einer Woche "+2 Tg"
+            if ($tileFullWeeks >= 1) {
+                $tileNextChip = '+' . $tileFullWeeks . ' Wo';
+            } elseif ($tileDays > 0) {
+                $tileNextChip = '+' . $tileDays . ' Tg';
+            }
+        }
+        $tileWeekdayName = mb_substr($this->MyTime->getWeekdayName($this->MyTime->formatAsWeekday($tilePickupTs)), 0, 2);
+        echo '<div class="t-pickup-line">';
+        echo '<span class="t-pickup-label">Abholung</span> <span class="pickup-day">' . h($tileWeekdayName) . ' ' . date('d.m.', $tilePickupTs) . '</span>';
+        if ($tileNextChip != '') {
+            echo ' <span class="t-next-chip">' . h($tileNextChip) . '</span>';
+        }
+        echo '</div>';
+    }
+
+    // "Bestellbar bis" wird in der Kachel bewusst nicht ausgegeben
+    if ($tileMovedPickupDayInfo != '') {
+        echo '<span class="pickup-day-exception-info">' . h($tileMovedPickupDayInfo) . '</span>';
+    }
+} elseif (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
 
     $movedPickupDayInfo = '';
     if (!OrderCustomerService::isOrderForDifferentCustomerMode() && !OrderCustomerService::isSelfServiceModeByUrl() && $product->delivery_rhythm_type != 'individual') {
@@ -118,8 +165,16 @@ if (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
     }
 }
 
+if ($isTile) {
+    echo '</div>';
+    echo '<div class="t-mfr">';
+}
+
 if (Configure::read('app.showManufacturerListAndDetailPage')) {
-    echo '<br />'.__('Manufacturer').': ';
+    // in der Kachel nur der Herstellername (als Link), ohne Beschriftung und Umbruch
+    if (!$isTile) {
+        echo '<br />'.__('Manufacturer').': ';
+    }
     if ($showManufacturerDetailLink) {
         echo $this->Html->link(
             $product->manufacturer->name,
@@ -147,4 +202,8 @@ if (!OrderCustomerService::isOrderForDifferentCustomerMode()) {
                 );
         }
     }
+}
+
+if ($isTile) {
+    echo '</div>';
 }

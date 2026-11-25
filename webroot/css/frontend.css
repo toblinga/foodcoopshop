@@ -2106,3 +2106,370 @@ body.has-page-banner #content {
     display: block;
     color: var(--warning-red);
 }
+
+/* ---------- Kachelansicht fuer Produktlisten (Kategorie- und Suchseite) ----------
+   Gleiches Markup wie die Listenansicht; die Kachel ordnet die Teile per CSS-Order neu.
+   Standard ist die Liste; Klasse "kacheln" setzt das Script bzw. das Cookie fcsProductView.
+   Feste Mindesthoehen gibt es bewusst nicht: die Teile fliessen natuerlich; nur der Block
+   ab Menge (margin-top:auto) sitzt unten, damit Menge und Warenkorb je Reihe auf gleicher Hoehe liegen. */
+.product-view-switch {
+    display: inline-block;
+    margin-left: 12px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.product-view-switch a {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-left: 2px;
+    border: 1px solid #d6d4d4;
+    border-radius: 4px;
+    color: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    background: transparent;
+}
+.product-view-switch a.active {
+    background: #d6d4d4;
+}
+div.products-wrapper.kacheln {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 14px;
+    align-items: stretch;
+}
+div.products-wrapper.kacheln::after {
+    display: none;
+}
+div.products-wrapper.kacheln > .pw {
+    float: none;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #d6d4d4;
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+/* Spalten aufloesen, damit alle Teile einzeln einsortiert werden koennen */
+div.products-wrapper.kacheln > .pw .c2,
+div.products-wrapper.kacheln > .pw .c3,
+div.products-wrapper.kacheln > .pw .ew.active {
+    display: contents;
+}
+div.products-wrapper.kacheln > .pw div.c1 {
+    float: none !important;
+    width: 100% !important;
+    margin: 0 0 10px 0 !important;
+    order: 10;
+}
+#inner-content div.products-wrapper.kacheln > .pw div.c1 img {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 170px !important;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 5px;
+    margin: 0 auto;
+}
+/* Reihenfolge: Bild, Name, Kurztext, Preis, Grundpreis/Einheit/Varianten, Menge, Warenkorb, Bestellt-Hinweis, Abholtag, Hersteller */
+div.products-wrapper.kacheln > .pw .c2 > .heading { order: 20; width: 100%; }
+div.products-wrapper.kacheln > .pw .c2 > .heading h4 {
+    float: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 23px;
+    margin: 0 0 6px 0;
+    word-break: break-word;
+}
+div.products-wrapper.kacheln > .pw .c2 > .descriptions { order: 30; }
+div.products-wrapper.kacheln > .pw .c2 > .descriptions:empty { display: none; }
+div.products-wrapper.kacheln > .pw .c2 > .descriptions > .t-short {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+    margin-bottom: 6px;
+}
+div.products-wrapper.kacheln > .pw .c2 > .t-pickup { order: 100; margin-top: 0; }
+div.products-wrapper.kacheln > .pw .c2 > .t-mfr { order: 110; margin-top: 0; }
+/* Fuehrende Zeilenumbrueche aus der Listenansicht wuerden sonst eine Leerzeile erzeugen */
+div.products-wrapper.kacheln > .pw .t-pickup > br:first-child,
+div.products-wrapper.kacheln > .pw .t-mfr > br:first-child,
+div.products-wrapper.kacheln > .pw .t-pickup .last-order-day > br:first-child {
+    display: none;
+}
+div.products-wrapper.kacheln > .pw .t-pickup .last-order-day {
+    display: block;
+    font-size: 13px;
+    margin-top: 2px;
+}
+/* Abholzeile: Datum bleibt lesbar, nur der Chip darf umbrechen */
+div.products-wrapper.kacheln > .pw .t-pickup-line {
+    display: block;
+    line-height: 22px;
+}
+div.products-wrapper.kacheln > .pw .t-pickup-line .pickup-day {
+    white-space: nowrap;
+}
+/* kleiner neutraler Chip, ohne Farb- oder Bildaenderung der Kachel */
+div.products-wrapper.kacheln > .pw .t-next-chip {
+    display: inline-block;
+    font-size: 11px;
+    line-height: 14px;
+    padding: 0 4px;
+    margin: 0 0 0 2px;
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    border-radius: 8px;
+    color: inherit;
+    opacity: 0.75;
+    vertical-align: 2px;
+}
+/* leere Hinweiszeile (nicht verfuegbar) nicht als Abstand rendern */
+div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .not-available-info:empty) {
+    display: none;
+}
+div.products-wrapper.kacheln > .pw .c3 > .radio,
+div.products-wrapper.kacheln > .pw .c3 > .unity,
+div.products-wrapper.kacheln > .pw .c3 > .t-variants,
+div.products-wrapper.kacheln > .pw .c3 > p { order: 60; }
+div.products-wrapper.kacheln > .pw .ew.active > * { order: 85; }
+div.products-wrapper.kacheln > .pw .ew.active > .line.t-price { order: 50; }
+div.products-wrapper.kacheln > .pw .ew.active > .t-grund { order: 55; }
+/* Hinweis "nach Gewicht" direkt unter dem Preis, klein und grau */
+div.products-wrapper.kacheln > .pw .ew.active > .t-weight {
+    order: 52;
+    margin: -2px 0 4px 0;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8a8a8a;
+}
+div.products-wrapper.kacheln > .pw .ew.active > .amount-wrapper { order: 70; }
+div.products-wrapper.kacheln > .pw .ew.active > .quantity-in-units-input-field-wrapper { order: 72; }
+div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .btn-cart) { order: 80; }
+div.products-wrapper.kacheln > .pw .ew.active > .ordered-products-total-amount { order: 90; }
+div.products-wrapper.kacheln > .pw .ew.active > .tax { display: none; }
+div.products-wrapper.kacheln > .pw .t-grund {
+    margin: 2px 0 6px 0;
+    font-size: 14px;
+    word-break: break-word;
+}
+div.products-wrapper.kacheln > .pw .t-variants {
+    margin-bottom: 6px;
+}
+div.products-wrapper.kacheln > .pw .t-variants select.t-variant-select {
+    width: 100%;
+    min-height: 40px;
+    padding: 4px 8px;
+    font-size: 15px;
+    border: 1px solid #d6d4d4;
+    border-radius: 4px;
+}
+div.products-wrapper.kacheln > .pw .line {
+    float: none;
+    width: 100%;
+}
+div.products-wrapper.kacheln > .pw .btn-cart {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+/* Menge und Warenkorb sowie der Rest unten: Block wird an den Kartenboden gedrueckt */
+div.products-wrapper.kacheln > .pw .ew.active > .amount-wrapper {
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 6px;
+}
+div.products-wrapper.kacheln > .pw .ordered-products-total-amount {
+    margin: 4px 0 6px 0;
+    font-size: 14px;
+}
+div.products-wrapper.kacheln > .pw .t-pickup,
+div.products-wrapper.kacheln > .pw .t-mfr {
+    word-break: break-word;
+}
+/* Herstellerzeile einzeilig; langer Name wird gekuerzt, der Link bleibt erhalten */
+div.products-wrapper.kacheln > .pw .c2 > .t-mfr {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    word-break: normal;
+}
+@media (max-width: 767px) {
+    /* Zwei Spalten, kompakte Kacheln */
+    div.products-wrapper.kacheln {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    div.products-wrapper.kacheln > .pw {
+        padding: 6px;
+    }
+    div.products-wrapper.kacheln > .pw div.c1 {
+        margin-bottom: 6px !important;
+    }
+    #inner-content div.products-wrapper.kacheln > .pw div.c1 img {
+        height: 110px !important;
+    }
+    div.products-wrapper.kacheln > .pw .c2 > .heading h4 {
+        font-size: 15px !important;
+        line-height: 19px;
+        margin-bottom: 4px;
+    }
+    div.products-wrapper.kacheln > .pw .c2 > .descriptions > .t-short {
+        font-size: 13px;
+        line-height: 17px;
+    }
+    div.products-wrapper.kacheln > .pw .ew.active > .line.t-price .price {
+        font-size: 18px !important;
+    }
+    div.products-wrapper.kacheln > .pw .t-grund {
+        font-size: 12px;
+    }
+    div.products-wrapper.kacheln > .pw .c2 > .t-pickup,
+    div.products-wrapper.kacheln > .pw .c2 > .t-mfr {
+        font-size: 12px;
+    }
+    /* Touch-Ziele: mindestens 44 px hoch */
+    div.products-wrapper.kacheln > .pw .btn-cart {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px !important;
+        width: 100% !important;
+        font-size: 15px !important;
+        padding: 8px 6px !important;
+        white-space: normal;
+    }
+    div.products-wrapper.kacheln > .pw .t-variants select.t-variant-select {
+        min-height: 44px;
+        font-size: 14px;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper .loi {
+        display: none;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper input[name="amount"] {
+        height: 44px !important;
+        width: 48px !important;
+        font-size: 16px !important;
+        text-align: center;
+        padding: 4px !important;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper a.as {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    div.products-wrapper.kacheln > .pw .amount-wrapper .fas {
+        font-size: 24px !important;
+        margin-top: 0 !important;
+    }
+    div.products-wrapper.kacheln > .pw .ordered-products-total-amount {
+        font-size: 12px;
+    }
+}
+
+/* ---------- Produkt-Detailseite am Handy: groessere Mengen-Buttons (Touch-Ziel mind. 44 px) ----------
+   Nur auf der Detailseite (body.products.detail); Listen- und Kachelansicht bleiben unveraendert. */
+@media (max-width: 767px) {
+    body.products.detail .ew .amount-wrapper input[name="amount"] {
+        height: 44px;
+        width: 56px;
+        font-size: 18px;
+        text-align: center;
+        padding: 4px;
+        box-sizing: border-box;
+    }
+    body.products.detail .ew .amount-wrapper a.as {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        vertical-align: middle;
+    }
+    body.products.detail .ew .amount-wrapper a.as .fas {
+        font-size: 28px;
+    }
+}
+
+/* ---------- Warenkorb am Handy: Plus, Minus und Entfernen mindestens 44 px Touch-Ziel ----------
+   Nur body.carts und unter 768 px; Mengen-, Entfernen- und Summenlogik bleibt unveraendert. */
+@media (max-width: 767px) {
+    body.carts .cart .products span.product span.amount {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        white-space: nowrap;
+    }
+    body.carts .cart .products span.product span.amount a.btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        margin: 0;
+    }
+    body.carts .cart .products span.product span.amount a.btn .fas {
+        font-size: 24px;
+    }
+    body.carts .cart .products span.product span.amount span.value {
+        min-width: 22px;
+        text-align: center;
+    }
+    body.carts .cart .products span.product span.delete a.btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        margin: 0;
+    }
+    body.carts .cart .products span.product span.delete a.btn .fas {
+        font-size: 22px;
+    }
+}
+
+/* ---------- Produkt-Detailseite am Handy: Menge in einer Zeile (Minus, Feld, Plus), Spalte rechts breiter ----------
+   Nur body.products.detail und unter 768 px; Warenkorb-Logik unberuehrt. */
+@media (max-width: 767px) {
+    body.products.detail .pw .c1 {
+        width: 70px !important;
+    }
+    body.products.detail .pw .c2 {
+        width: 130px !important;
+    }
+    body.products.detail .pw .c3 {
+        width: 150px !important;
+    }
+    body.products.detail .ew .amount-wrapper {
+        display: flex !important;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 2px;
+        float: none;
+        width: 100%;
+    }
+    body.products.detail .ew .amount-wrapper a.as-minus {
+        order: -1;
+    }
+    body.products.detail .ew .amount-wrapper input[name="amount"] {
+        width: 46px !important;
+    }
+}

@@ -176,8 +176,8 @@ foodcoopshop.Mobile = {
             }
         });
 
-        // button renaming
-        $('.ew .btn').html('<i class="fa fa-lg fa-fw fa-shopping-bag"></i>');
+        // button renaming (Kachelansicht behaelt den Text "In den Warenkorb")
+        $('.ew .btn').not('.kacheln .btn').html('<i class="fa fa-lg fa-fw fa-shopping-bag"></i>');
 
         // move flash message into header
         $('#' + headerId).append($('#flashMessage'));
@@ -303,7 +303,7 @@ foodcoopshop.Mobile = {
             $(this).html($(this).html().replace(regexp, __('Show')));
         });
         $('.blog-post-wrapper div.c3 a.btn').html(__('Show'));
-        $('.ew .btn').each(function() {
+        $('.ew .btn').not('.kacheln .btn').each(function() {
             if (!$(this).find('i').hasClass('fa-times')) { // delivery break?
                 $(this).html($(this).find('i').after($(this).text()));
             }
