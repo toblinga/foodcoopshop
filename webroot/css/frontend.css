@@ -2384,3 +2384,27 @@ div.products-wrapper.kacheln > .pw .c2 > .t-mfr {
         font-size: 12px;
     }
 }
+
+/* ---------- Produkt-Detailseite am Handy: groessere Mengen-Buttons (Touch-Ziel mind. 44 px) ----------
+   Nur auf der Detailseite (body.products.detail); Listen- und Kachelansicht bleiben unveraendert. */
+@media (max-width: 767px) {
+    body.products.detail .ew .amount-wrapper input[name="amount"] {
+        height: 44px;
+        width: 56px;
+        font-size: 18px;
+        text-align: center;
+        padding: 4px;
+        box-sizing: border-box;
+    }
+    body.products.detail .ew .amount-wrapper a.as {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        vertical-align: middle;
+    }
+    body.products.detail .ew .amount-wrapper a.as .fas {
+        font-size: 28px;
+    }
+}
