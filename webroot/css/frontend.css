@@ -2408,3 +2408,40 @@ div.products-wrapper.kacheln > .pw .c2 > .t-mfr {
         font-size: 28px;
     }
 }
+
+/* ---------- Warenkorb am Handy: Plus, Minus und Entfernen mindestens 44 px Touch-Ziel ----------
+   Nur body.carts und unter 768 px; Mengen-, Entfernen- und Summenlogik bleibt unveraendert. */
+@media (max-width: 767px) {
+    body.carts .cart .products span.product span.amount {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        white-space: nowrap;
+    }
+    body.carts .cart .products span.product span.amount a.btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        margin: 0;
+    }
+    body.carts .cart .products span.product span.amount a.btn .fas {
+        font-size: 24px;
+    }
+    body.carts .cart .products span.product span.amount span.value {
+        min-width: 22px;
+        text-align: center;
+    }
+    body.carts .cart .products span.product span.delete a.btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        margin: 0;
+    }
+    body.carts .cart .products span.product span.delete a.btn .fas {
+        font-size: 22px;
+    }
+}
