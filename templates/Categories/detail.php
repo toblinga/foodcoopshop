@@ -50,7 +50,8 @@ if (!empty($blogPosts) && $blogPosts->count() > 0) {
 ?>
 
 <?php
-$isTileView = $this->request->getCookie('fcsProductView') === 'kacheln';
+// Kachelansicht ist Standard; nur ein explizit gewaehltes Listen-Cookie schaltet zurueck
+$isTileView = $this->request->getCookie('fcsProductView') !== 'liste';
 ?>
 
 <h1 class="middle-line">
