@@ -62,7 +62,57 @@ if ($isTile) {
     echo '<div class="t-pickup">';
 }
 
-if (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
+if ($isTile && !Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY') && !OrderCustomerService::isOrderForDifferentCustomerMode() && !OrderCustomerService::isSelfServiceModeByUrl()) {
+    // Kachel: kurze Zeile "Abholung Fr 27.11." (ohne Jahr, ohne Rhythmus-Text), Chip bei spaeterer Periode,
+    // darunter "Bestellbar bis" als eigene Zeile
+    $tileMovedPickupDayInfo = '';
+    if ($product->delivery_rhythm_type != 'individual') {
+        $tileMovedPickupDayInfo = (new PickupDayExceptionService())->getMovedPickupDayInfo((string) $product->next_delivery_day);
+    }
+    $tileDeliveryBreak = $product->next_delivery_day == 'delivery-rhythm-triggered-delivery-break';
+    $tilePickupTs = $tileDeliveryBreak ? 0 : strtotime($product->next_delivery_day);
+    if (!$tileDeliveryBreak) {
+        $tileNextChip = '';
+        if ($tilePickupTs != (new DeliveryRhythmService())->getDeliveryDayByCurrentDay()) {
+            $tileWeeksAsFloat = ($tilePickupTs - strtotime(date($this->MyTime->getI18Format('DateShortAlt')))) / 24 / 60 / 60;
+            $tileFullWeeks = (int) ($tileWeeksAsFloat / 7);
+            $tileDays = (int) $tileWeeksAsFloat % 7;
+            // kurz: "+1 Woche", sonst "naechste Abholung" (Umlaute im Quelltext als UTF-8)
+            $tileNextChip = ($tileDays == 0 && $tileFullWeeks >= 1)
+                ? '+' . __('{0,plural,=1{1_week} other{#_weeks}}', [$tileFullWeeks])
+                : 'nächste Abholung';
+        }
+        $tileWeekdayName = mb_substr($this->MyTime->getWeekdayName($this->MyTime->formatAsWeekday($tilePickupTs)), 0, 2);
+        echo '<div class="t-pickup-line">';
+        echo '<span class="t-pickup-label">Abholung</span> <span class="pickup-day">' . h($tileWeekdayName) . ' ' . date('d.m.', $tilePickupTs) . '</span>';
+        if ($tileNextChip != '') {
+            echo ' <span class="t-next-chip">' . h($tileNextChip) . '</span>';
+        }
+        echo '</div>';
+    }
+
+    if (!OrderCustomerService::isOrderForDifferentCustomerMode() && !($product->manufacturer->stock_management_enabled && $product->is_stock_product)) {
+        $tileLastOrderDay = (new DeliveryRhythmService())->getLastOrderDay(
+            $product->next_delivery_day,
+            $product->delivery_rhythm_type,
+            $product->delivery_rhythm_send_order_list_weekday,
+            $product->delivery_rhythm_order_possible_until,
+        );
+        if ((!($product->delivery_rhythm_type == 'week'
+            && $product->delivery_rhythm_count == 1
+            && (new DeliveryRhythmService())->getSendOrderListsWeekday() == $product->delivery_rhythm_send_order_list_weekday
+            ) || $tileMovedPickupDayInfo != '')
+            && $tileLastOrderDay != ''
+            ) {
+                $tileLastTs = strtotime($tileLastOrderDay);
+                $tileLastWeekday = mb_substr($this->MyTime->getWeekdayName($this->MyTime->formatAsWeekday($tileLastTs)), 0, 2);
+                echo '<div class="last-order-day">' . __('Order_possible_until') . ': ' . h($tileLastWeekday) . ' ' . date('d.m.', $tileLastTs) . '</div>';
+        }
+    }
+    if ($tileMovedPickupDayInfo != '') {
+        echo '<span class="pickup-day-exception-info">' . h($tileMovedPickupDayInfo) . '</span>';
+    }
+} elseif (!Configure::read('appDb.FCS_CUSTOMER_CAN_SELECT_PICKUP_DAY')) {
 
     $movedPickupDayInfo = '';
     if (!OrderCustomerService::isOrderForDifferentCustomerMode() && !OrderCustomerService::isSelfServiceModeByUrl() && $product->delivery_rhythm_type != 'individual') {

@@ -2209,6 +2209,29 @@ div.products-wrapper.kacheln > .pw .t-pickup .last-order-day > br:first-child {
 }
 div.products-wrapper.kacheln > .pw .t-pickup .last-order-day {
     display: block;
+    font-size: 13px;
+    margin-top: 2px;
+}
+/* Abholzeile: Datum bleibt lesbar, nur der Chip darf umbrechen */
+div.products-wrapper.kacheln > .pw .t-pickup-line {
+    display: block;
+    line-height: 22px;
+}
+div.products-wrapper.kacheln > .pw .t-pickup-line .pickup-day {
+    white-space: nowrap;
+}
+/* kleiner neutraler Chip, ohne Farb- oder Bildaenderung der Kachel */
+div.products-wrapper.kacheln > .pw .t-next-chip {
+    display: inline-block;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 1px 6px;
+    margin: 1px 0;
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    border-radius: 10px;
+    color: inherit;
+    opacity: 0.75;
+    vertical-align: middle;
 }
 /* leere Hinweiszeile (nicht verfuegbar) nicht als Abstand rendern */
 div.products-wrapper.kacheln > .pw .ew.active > .line:has(> .not-available-info:empty) {
