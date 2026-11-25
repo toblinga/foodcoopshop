@@ -49,8 +49,9 @@ if ($showProductPrice) {
     }
     echo '</div>';
     echo '<div class="tax">'. $this->Number->formatAsCurrency($product->calculated_tax) . '</div>';
-    if ($isTile && $pricePerUnitInfoText != '') {
-        echo '<div class="t-grund">' . $pricePerUnitInfoText . '</div>';
+    if ($isTile) {
+        // Platzhalter immer ausgeben, damit die Zonenhoehe in jeder Kachel gleich ist
+        echo '<div class="t-grund">' . ($pricePerUnitInfoText ?? '') . '</div>';
     }
 } else {
     // Cart.js::initAddToCartButton() needs the following elements!
@@ -117,4 +118,7 @@ if (!$isAmountBasedOnQuantityInUnitsIncludingSelfServiceCheck) {
 }
 if (!empty($unityStrings)) {
     echo '<div class="unity">'.__('Unit').': <span class="value">' . join(', ', $unityStrings).'</span></div>';
+} elseif ($isTile) {
+    // leere Zone, damit die Menge-Zeile in jeder Kachel auf gleicher Hoehe liegt
+    echo '<div class="unity"></div>';
 }

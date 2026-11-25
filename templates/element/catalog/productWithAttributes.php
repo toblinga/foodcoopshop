@@ -89,10 +89,11 @@ foreach ($preparedProductAttributes as $attribute) {
         }
 
         echo '<div class="tax">'. $this->Number->formatAsCurrency($attribute->calculated_tax) . '</div>';
-        if ($isTile && $pricePerUnitInfoText != '') {
-            echo '<div class="t-grund">' . $pricePerUnitInfoText . '</div>';
-        }
         echo '</div>';
+        if ($isTile) {
+            // Platzhalter immer ausgeben, damit die Zonenhoehe in jeder Kachel gleich ist
+            echo '<div class="t-grund">' . ($pricePerUnitInfoText ?? '') . '</div>';
+        }
     } else {
         // Cart.js::initAddToCartButton() needs the following elements!
         echo '<div class="price hide">' . $this->Number->formatAsCurrency(0) . '</div>';
@@ -147,6 +148,9 @@ foreach ($preparedProductAttributes as $attribute) {
 }
 
 // radio buttons for changing attributes
+if ($isTile) {
+    echo '<div class="t-variants">';
+}
 foreach ($preparedProductAttributes as $attribute) {
 
     $radioButtonLabel = $this->PricePerUnit->getQuantityInUnitsStringForAttributes(
@@ -164,4 +168,7 @@ foreach ($preparedProductAttributes as $attribute) {
               </label>
           </div>';
 
+}
+if ($isTile) {
+    echo '</div>';
 }

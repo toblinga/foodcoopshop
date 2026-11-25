@@ -33,7 +33,10 @@ echo '<div class="heading">';
 echo '</div>';
 
 echo '<div class="descriptions">';
-    if ($product->description_short != '') {
+    if ($isTile) {
+        // Kurztext in fester Zone (max. 4 Zeilen), damit Menge und Warenkorb in jeder Kachel auf gleicher Hoehe liegen
+        echo '<div class="t-short">' . $product->description_short . '</div>';
+    } elseif ($product->description_short != '') {
         echo $product->description_short.'<br />';
     }
 
