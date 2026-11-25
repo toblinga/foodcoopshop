@@ -1,8 +1,9 @@
 /**
  * Chip-Eingabe (Tom Select) fuer Blogbeitraege:
- * - supplier-product: Lieferanten und Produkte in einem Feld, Live-Suche
+ * - supplier-product: Lieferanten und Produkte in einem Feld, Live-Suche beim Tippen
  * - tag: Stichwoerter, Live-Suche, neue Stichwoerter per Eingabe
- * - category: feste Auswahl ohne Suche
+ * - category: feste Auswahl als Chips
+ * Die Chips werden sichtbar gerendert (die Vorgabe der Instanz blendet sie aus).
  */
 foodcoopshop.BlogPostMapping = {
 
@@ -15,11 +16,21 @@ foodcoopshop.BlogPostMapping = {
         return element ? element.tomselect : null;
     },
 
+    escapeHtml: function (text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+
     init: function () {
         var self = this;
         document.querySelectorAll('select.blog-post-mapping').forEach(function (element) {
+            // vorhandene Instanz (z. B. nach Neuladen) sauber entfernen
+            if (element.tomselect) {
+                element.tomselect.destroy();
+            }
             var type = element.getAttribute('data-mapping');
-            var hasSearch = !!element.getAttribute('data-search-url');
+            var searchUrl = element.getAttribute('data-search-url');
             var settings = {
                 plugins: ['remove_button'],
                 valueField: 'value',
@@ -27,19 +38,28 @@ foodcoopshop.BlogPostMapping = {
                 searchField: ['text'],
                 maxItems: null,
                 hideSelected: true,
-                preload: hasSearch ? 'focus' : null,
-                placeholder: element.getAttribute('data-placeholder') || ''
+                placeholder: element.getAttribute('data-placeholder') || '',
+                closeAfterSelect: false,
+                render: {
+                    item: function (data, escape) {
+                        return '<div class="blog-chip">' + escape(data.text) + '</div>';
+                    },
+                    no_results: function () {
+                        return '<div class="no-results">Keine Treffer</div>';
+                    }
+                }
             };
-            if (hasSearch) {
+            if (searchUrl) {
+                settings.preload = 'focus';
                 settings.load = function (query, callback) {
-                    self.search(element, type, query, callback);
+                    self.search(searchUrl, type, query, callback);
                 };
             }
             if (type === 'tag') {
                 settings.create = true;
-                settings.createOnBlur = false;
             }
-            foodcoopshop.TomSelectCustom.init(element, settings);
+            var ts = new TomSelect(element, settings);
+            element.tomselect = ts;
         });
 
         var addAllButton = document.querySelector('.add-all-products-of-manufacturer');
@@ -51,12 +71,13 @@ foodcoopshop.BlogPostMapping = {
         }
     },
 
-    search: function (element, type, query, callback) {
-        var url = element.getAttribute('data-search-url') +
-            '?type=' + encodeURIComponent(type) +
-            '&q=' + encodeURIComponent(query || '');
+    search: function (searchUrl, type, query, callback) {
+        var url = searchUrl + '?type=' + encodeURIComponent(type) + '&q=' + encodeURIComponent(query || '');
         fetch(url, { credentials: 'same-origin' })
-            .then(function (response) { return response.json(); })
+            .then(function (response) {
+                if (!response.ok) { throw new Error('HTTP ' + response.status); }
+                return response.json();
+            })
             .then(function (items) { callback(items); })
             .catch(function () { callback(); });
     },
