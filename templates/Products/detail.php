@@ -60,7 +60,7 @@ if (Configure::read('app.showOrderedProductsTotalAmountInCatalog')) {
     ]
     );
 ?>
-
+<?php
 if (!empty($productBlogPosts['posts'])) {
     echo '<div class="product-blog-posts">';
     echo '<h2 class="further-news">' . __('Further_news') . '</h2>';
