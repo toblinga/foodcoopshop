@@ -236,11 +236,21 @@ foodcoopshop.Mobile = {
         // Kategorien kommen bereits als Baum unter "Shop" aus dem Hauptmenü, daher hier nicht noch einmal
 
         var pageItems = ['<li class="header">' + __('Pages') + '</li>'];
+        // Shop wird direkt unter Home eingefuegt (im Hauptmenue steht Shop ganz hinten)
+        var shopMenuItem = $('#main-menu > li').filter(function () {
+            return $(this).find('a').attr('href') == '/shop';
+        });
         $('#main-menu > li').each(function () {
             // take categories and manufacturers from sidebar and not from main menu
             var mainMenuHref = $(this).find('a').attr('href');
+            if (mainMenuHref == '/shop') {
+                return;
+            }
             if ($.inArray(mainMenuHref, ['/' + __('route_manufacturer_list'), foodcoopshop.config.routeAllCategories, '/' + __('route_news_list')]) == -1) {
                 pageItems.push($(this));
+            }
+            if (mainMenuHref == '/' && shopMenuItem.length > 0) {
+                pageItems.push(shopMenuItem);
             }
         });
 
