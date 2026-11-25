@@ -39,24 +39,20 @@ if ($blogPost->short_description != '') {
     echo '<p><b>'.$blogPost->short_description.'</b></p>';
 }
 
-    if (!empty($blogCategories)) {
-        echo '<ul class="blog-category-tree">';
-        foreach ($blogCategories as $blogCategory) {
-            echo '<li>';
-            if ($blogCategory['icon'] !== '') {
-                echo '<i class="fas ' . h($blogCategory['icon']) . '"></i> ';
-            }
-            echo h($blogCategory['path']);
-            echo '</li>';
-        }
-        echo '</ul>';
-    }
 
     $isRecipe = $blogPost->isRecipe();
     echo '<div class="content' . ($isRecipe ? ' is-recipe' : '') . '">';
         echo $blogPost->content;
     echo '</div>';
 
+    if (!empty($blogCategories)) {
+        echo '<ul class="blog-category-tree">';
+        foreach ($blogCategories as $blogCategory) {
+            $label = ($blogCategory['icon'] !== '' ? '<i class="fas ' . h($blogCategory['icon']) . '"></i> ' : '') . h($blogCategory['path']);
+            echo '<li>' . $this->Html->link($label, $this->Slug->getBlogCategory($blogCategory['id'], $blogCategory['name']), ['escape' => false]) . '</li>';
+        }
+        echo '</ul>';
+    }
     echo '<p><i>';
         echo '<br />'.__('Modified_on'). ' ' . $blogPost->modified->i18nFormat(Configure::read('app.timeHelper')->getI18Format('DateNTimeShort'));
 if (!empty($blogPost->manufacturer)) {

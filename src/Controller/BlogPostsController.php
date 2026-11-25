@@ -32,7 +32,34 @@ class BlogPostsController extends FrontendController
         $this->Authentication->allowUnauthenticated([
             'index',
             'detail',
+            'category',
         ]);
+    }
+
+    public function category(): ?Response
+    {
+        $idAndSlug = (string) $this->getRequest()->getParam('idAndSlug');
+        $categoryId = (int) $idAndSlug;
+
+        $blogCategoriesTable = TableRegistry::getTableLocator()->get('BlogCategories');
+        $blogCategory = $blogCategoriesTable->find()
+            ->where(['id_blog_category' => $categoryId, 'active' => APP_ON])
+            ->first();
+        if (empty($blogCategory)) {
+            throw new RecordNotFoundException('blog category not found');
+        }
+
+        $correctSlug = StringComponent::slugify($blogCategory->name);
+        $givenSlug = StringComponent::removeIdFromSlug($idAndSlug);
+        if ($correctSlug != $givenSlug) {
+            return $this->redirect(Configure::read('app.slugHelper')->getBlogCategory($categoryId, $blogCategory->name));
+        }
+
+        $blogPostsTable = TableRegistry::getTableLocator()->get('BlogPosts');
+        $this->set('blogPosts', $blogPostsTable->findBlogPostsByCategory($categoryId));
+        $this->set('blogCategory', $blogCategory);
+        $this->set('title_for_layout', $blogCategory->name);
+        return null;
     }
 
     public function detail(): ?Response
