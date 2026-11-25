@@ -218,3 +218,74 @@
     top: 8px;
     font-size: 15px;
 }
+
+/*
+ * Blog-Chip-Felder (Lieferanten & Produkte, Stichwoerter, Kategorien):
+ * breiter und mehrzeilig, Chips umbrechen statt abzuschneiden.
+ * Nur fuer .blog-post-mapping (Tom-Select-Wrapper erbt die Klassen des <select>).
+ */
+.ts-wrapper.blog-post-mapping {
+    display: block;
+    width: 100% ! important;
+    max-width: 100%;
+    min-width: min(520px, 100%);
+    vertical-align: top;
+}
+.ts-wrapper.blog-post-mapping .ts-control,
+.ts-wrapper.blog-post-mapping.multi.has-items .ts-control {
+    display: flex;
+    flex-wrap: wrap ! important;
+    align-items: center;
+    align-content: flex-start;
+    gap: 4px 6px;
+    min-height: 44px;
+    height: auto ! important;
+    padding: 5px 30px 5px 6px ! important;
+    overflow: visible ! important;
+    white-space: normal;
+}
+.ts-wrapper.blog-post-mapping .ts-control > .item {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 auto;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    font-size: 15px;
+}
+.ts-wrapper.blog-post-mapping .ts-control > .item .blog-chip {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+.ts-wrapper.blog-post-mapping .ts-control > input.items-placeholder,
+.ts-wrapper.blog-post-mapping .ts-control > input {
+    flex: 1 1 160px;
+    min-width: 120px ! important;
+    width: auto;
+}
+/* Dropdown: vollstaendige Bezeichnung (Praefix + Lieferant) darf umbrechen */
+.ts-wrapper.blog-post-mapping .ts-dropdown .ts-dropdown-content .option {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Handy (ca. 390 px): volle Breite, kein horizontales Scrollen */
+@media (max-width: 767px) {
+    .ts-wrapper.blog-post-mapping {
+        min-width: 0;
+        width: 100% ! important;
+    }
+    .ts-wrapper.blog-post-mapping .ts-control,
+    .ts-wrapper.blog-post-mapping.multi.has-items .ts-control {
+        padding: 5px 28px 5px 5px ! important;
+    }
+    .ts-wrapper.blog-post-mapping .ts-dropdown {
+        max-width: calc(100vw - 32px);
+    }
+}
