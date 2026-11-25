@@ -137,7 +137,10 @@ if ($isTile) {
 }
 
 if (Configure::read('app.showManufacturerListAndDetailPage')) {
-    echo '<br />'.__('Manufacturer').': ';
+    // in der Kachel nur der Herstellername (als Link), ohne Beschriftung und Umbruch
+    if (!$isTile) {
+        echo '<br />'.__('Manufacturer').': ';
+    }
     if ($showManufacturerDetailLink) {
         echo $this->Html->link(
             $product->manufacturer->name,

@@ -2265,6 +2265,14 @@ div.products-wrapper.kacheln > .pw .t-pickup,
 div.products-wrapper.kacheln > .pw .t-mfr {
     word-break: break-word;
 }
+/* Herstellerzeile einzeilig; langer Name wird gekuerzt, der Link bleibt erhalten */
+div.products-wrapper.kacheln > .pw .c2 > .t-mfr {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    word-break: normal;
+}
 @media (max-width: 767px) {
     /* Zwei Spalten, kompakte Kacheln */
     div.products-wrapper.kacheln {
