@@ -34,7 +34,66 @@ class AdminPagesControllerTest extends AppCakeTestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('id="pages-content"');
-        $this->assertResponseContains('Blöcke (nur für uneingeloggte User)');
+        $this->assertResponseContains('<h2>Blöcke</h2>');
+    }
+
+    public function testEditHomePostSavesBlockVisibility(): void
+    {
+        $this->loginAsSuperadmin();
+
+        $this->post($this->Slug->getPageEditHome(), [
+            'Pages' => [
+                'content' => '<p>Startseite</p>',
+            ],
+            'Blocks' => [
+                'block-1' => [
+                    'id' => 1,
+                    'image_position' => Block::IMAGE_POSITION_LEFT,
+                    'heading' => 'Nur Mitglieder',
+                    'content' => '<p>Blockinhalt</p>',
+                    'position' => 5,
+                    'active' => 1,
+                    'visibility' => Block::VISIBILITY_LOGGED_IN,
+                ],
+            ],
+            'Configurations' => [
+                'FCS_FOODCOOPS_MAP_ENABLED' => 0,
+            ],
+            'referer' => '/',
+        ]);
+
+        $this->assertFlashMessage(__('The homepage has been changed successfully.'));
+        $blocksTable = $this->getTableLocator()->get('Blocks');
+        $this->assertSame(Block::VISIBILITY_LOGGED_IN, $blocksTable->get(1)->visibility);
+    }
+
+    public function testEditHomePostRejectsUnknownBlockVisibility(): void
+    {
+        $this->loginAsSuperadmin();
+
+        $this->post($this->Slug->getPageEditHome(), [
+            'Pages' => [
+                'content' => '<p>Startseite</p>',
+            ],
+            'Blocks' => [
+                'block-1' => [
+                    'id' => 1,
+                    'image_position' => Block::IMAGE_POSITION_LEFT,
+                    'heading' => 'Ungueltig',
+                    'content' => '<p>Blockinhalt</p>',
+                    'position' => 5,
+                    'active' => 1,
+                    'visibility' => 'everyone',
+                ],
+            ],
+            'Configurations' => [
+                'FCS_FOODCOOPS_MAP_ENABLED' => 0,
+            ],
+            'referer' => '/',
+        ]);
+
+        $blocksTable = $this->getTableLocator()->get('Blocks');
+        $this->assertSame(Block::VISIBILITY_BOTH, $blocksTable->get(1)->visibility);
     }
 
     public function testEditHomePost(): void

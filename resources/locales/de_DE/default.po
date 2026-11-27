@@ -765,6 +765,18 @@ msgstr "Blöcke"
 msgid "only for logged out users"
 msgstr "nur für uneingeloggte User"
 
+msgid "Visibility"
+msgstr "Sichtbarkeit"
+
+msgid "Visible for logged in and logged out users"
+msgstr "für eingeloggte und uneingeloggte User"
+
+msgid "Visible only for logged in users"
+msgstr "nur für eingeloggte User"
+
+msgid "Visible only for logged out users"
+msgstr "nur für uneingeloggte User"
+
 msgid "Blog_archive"
 msgstr "Blog-Archiv"
 

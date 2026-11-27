@@ -143,7 +143,7 @@ echo '</section>';
 echo '<section class="home-edit-section home-edit-section-blocks">';
 echo '<div class="home-blocks-editor">';
     echo '<div class="home-blocks-editor-header">';
-        echo '<h2>' . __('Blocks') . ' ' . '(' . __('only for logged out users') . ')</h2>';
+        echo '<h2>' . __('Blocks') . '</h2>';
         echo '<a href="javascript:void(0);" class="btn btn-success add-home-block-button"><i class="fa-fw fas fa-plus"></i> ' . ($isMobile ? __('Block') : __('Add block')) . '</a>';
     echo '</div>';
 

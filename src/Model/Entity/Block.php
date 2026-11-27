@@ -21,4 +21,12 @@ class Block extends AppEntity
 	public const string ALLOWED_TAGS = '<h2><h3><b><i><strong><em><p><ul><ol><li><br><hr><a>';
 	public const int IMAGE_POSITION_LEFT = 1;
 	public const int IMAGE_POSITION_RIGHT = 2;
+	public const string VISIBILITY_BOTH = 'both';
+	public const string VISIBILITY_LOGGED_IN = 'logged_in';
+	public const string VISIBILITY_LOGGED_OUT = 'logged_out';
+	public const array VISIBILITIES = [
+		self::VISIBILITY_BOTH,
+		self::VISIBILITY_LOGGED_IN,
+		self::VISIBILITY_LOGGED_OUT,
+	];
 }
