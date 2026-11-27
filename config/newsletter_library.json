@@ -1,0 +1,82 @@
+{
+    "_hinweis": "Generische Beispiel-Bibliothek fuer FCS-Newsletter. Eigene Bausteine und Vorlagen (z. B. im Stil frueherer Mails) gehoeren NICHT ins Repository, sondern in eine eigene JSON-Datei: bin/cake newsletter import_library --file <datei>. Platzhalter __BASE_URL__, __LOGO_URL__, __APP_NAME__, __APP_EMAIL__ werden beim Installieren ersetzt.",
+    "blocks": [
+        {
+            "name": "Begrüßung",
+            "block": {"id": "lib-begruessung", "type": "text", "style": {"bg": "white"}, "data": {"html": "<p>Hallo {{vorname|liebe Mitglieder}}!</p>", "align": "left"}}
+        },
+        {
+            "name": "Text",
+            "block": {"id": "lib-text", "type": "text", "style": {"bg": "white"}, "data": {"html": "<p>Hier steht dein Text. Klick hinein, um ihn zu bearbeiten.</p>", "align": "left"}}
+        },
+        {
+            "name": "Überschrift (Abschnitt)",
+            "block": {"id": "lib-ueberschrift", "type": "heading", "style": {"bg": "white"}, "data": {"text": "Neu bei uns", "level": 2, "align": "left"}}
+        },
+        {
+            "name": "Bild + Text (Bild links)",
+            "block": {"id": "lib-bild-links", "type": "imageText", "style": {"bg": "white"}, "data": {"src": "", "alt": "Bildbeschreibung", "url": "", "heading": "Überschrift", "html": "<p>Ein kurzer Text neben dem Bild.</p>", "imagePos": "left", "buttonLabel": "", "buttonUrl": ""}}
+        },
+        {
+            "name": "Bild + Text (Bild rechts)",
+            "block": {"id": "lib-bild-rechts", "type": "imageText", "style": {"bg": "white"}, "data": {"src": "", "alt": "Bildbeschreibung", "url": "", "heading": "Überschrift", "html": "<p>Ein kurzer Text neben dem Bild.</p>", "imagePos": "right", "buttonLabel": "", "buttonUrl": ""}}
+        },
+        {
+            "name": "Knopf: Zum Shop",
+            "block": {"id": "lib-knopf-shop", "type": "button", "style": {"bg": "white"}, "data": {"label": "Zum Shop", "url": "__BASE_URL__", "align": "center", "variant": "filled"}}
+        },
+        {
+            "name": "Trennlinie",
+            "block": {"id": "lib-trenner", "type": "divider", "style": {"bg": "white"}, "data": {"variant": "line"}}
+        },
+        {
+            "name": "Abstand",
+            "block": {"id": "lib-abstand", "type": "spacer", "style": {"bg": "white"}, "data": {"height": 16}}
+        },
+        {
+            "name": "Hinweisbox",
+            "block": {"id": "lib-hinweis", "type": "callout", "style": {"bg": "white"}, "data": {"variant": "hint", "title": "Gut zu wissen", "html": "<p>Ein wichtiger Hinweis für alle.</p>", "author": ""}}
+        }
+    ],
+    "templates": [
+        {
+            "name": "Beispiel: Wochen-Newsletter",
+            "doc": {
+                "format": "fcs-newsletter-blocks",
+                "version": 1,
+                "settings": {},
+                "blocks": [
+                    {"id": "kopf", "type": "header", "style": {"bg": "white"}, "data": {"logo": "__LOGO_URL__", "alt": "__APP_NAME__", "logoWidth": 160, "tagline": "", "url": "__BASE_URL__"}},
+                    {"id": "begruessung", "type": "text", "style": {"bg": "white"}, "data": {"html": "<p>Hallo {{vorname|liebe Mitglieder}}!</p><p>Diese Woche gibt es bei uns wieder einiges Neues. Hier ein Überblick:</p>", "align": "left"}},
+                    {"id": "trenner-1", "type": "divider", "style": {"bg": "white"}, "data": {"variant": "line"}},
+                    {"id": "ueberschrift-1", "type": "heading", "style": {"bg": "white"}, "data": {"text": "Neu im Laden", "level": 2, "align": "left"}},
+                    {"id": "bild-text-1", "type": "imageText", "style": {"bg": "white"}, "data": {"src": "", "alt": "Bildbeschreibung", "url": "", "heading": "Ein Angebot", "html": "<p>Kurzer Text zum Angebot.</p>", "imagePos": "left", "buttonLabel": "Zum Shop", "buttonUrl": "__BASE_URL__"}},
+                    {"id": "trenner-2", "type": "divider", "style": {"bg": "white"}, "data": {"variant": "line"}},
+                    {"id": "signatur", "type": "text", "style": {"bg": "white"}, "data": {"html": "<p>Viele Grüße<br>Dein Team</p>", "align": "left"}},
+                    {"id": "footer", "type": "footer", "locked": true, "style": {"bg": "white"}, "data": {
+                        "social": [{"network": "website", "url": "__BASE_URL__"}],
+                        "contactHtml": "<p>Fragen? Schreib uns an <a href=\"mailto:__APP_EMAIL__\">__APP_EMAIL__</a></p>"
+                    }}
+                ]
+            }
+        },
+        {
+            "name": "Beispiel: Aktionsmail",
+            "doc": {
+                "format": "fcs-newsletter-blocks",
+                "version": 1,
+                "settings": {},
+                "blocks": [
+                    {"id": "kopf", "type": "header", "style": {"bg": "white"}, "data": {"logo": "__LOGO_URL__", "alt": "__APP_NAME__", "logoWidth": 160, "tagline": "", "url": "__BASE_URL__"}},
+                    {"id": "ueberschrift", "type": "heading", "style": {"bg": "white"}, "data": {"text": "Nur diese Woche: Aktion!", "level": 1, "align": "left"}},
+                    {"id": "text", "type": "text", "style": {"bg": "white"}, "data": {"html": "<p>Beschreibe hier die Aktion. <strong>Fett</strong> hebt Wichtiges hervor.</p>", "align": "left"}},
+                    {"id": "knopf", "type": "button", "style": {"bg": "white"}, "data": {"label": "Jetzt bestellen", "url": "__BASE_URL__", "align": "center", "variant": "filled"}},
+                    {"id": "footer", "type": "footer", "locked": true, "style": {"bg": "white"}, "data": {
+                        "social": [{"network": "website", "url": "__BASE_URL__"}],
+                        "contactHtml": "<p>Fragen? Schreib uns an <a href=\"mailto:__APP_EMAIL__\">__APP_EMAIL__</a></p>"
+                    }}
+                ]
+            }
+        }
+    ]
+}

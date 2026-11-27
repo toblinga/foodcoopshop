@@ -43,6 +43,7 @@ $markAsMigratedMigrations = [
     '20261120120000_AddConfigurationBillOrdersWithoutInvoices',
     '20261120130000_AddConfigurationContacts',
     '20261118120000_AddConfigurationPickupDayExceptions',
+    '20261127100100_AddConfigurationNewsletter',
 ];
 foreach($markAsMigratedMigrations as $markAsMigratedMigration) {
     $migrations->markMigrated($markAsMigratedMigration, ['connection' => 'test']);

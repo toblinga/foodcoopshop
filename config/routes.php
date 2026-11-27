@@ -54,6 +54,15 @@ return function (RouteBuilder $routes) {
         $routes->connect('/rezepte/{idAndSlug}', ['controller' => 'Recipes', 'action' => 'detail'])
             ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])
             ->setPass(['idAndSlug']);
+        // Newsletter (Anmeldung mit Double-Opt-in, Bestätigung, Abmeldung per Token)
+        $routes->connect('/newsletter', ['controller' => 'Newsletter', 'action' => 'index']);
+        $routes->connect('/newsletter/danke', ['controller' => 'Newsletter', 'action' => 'thanks']);
+        $routes->connect('/newsletter/bestaetigen/{token}', ['controller' => 'Newsletter', 'action' => 'confirm'])
+            ->setPatterns(['token' => '[a-zA-Z0-9]+']);
+        $routes->connect('/newsletter/abmelden/{token}', ['controller' => 'Newsletter', 'action' => 'unsubscribe'])
+            ->setPatterns(['token' => '[a-zA-Z0-9]+']);
+        $routes->connect('/newsletter/online/{campaignId}/{token}', ['controller' => 'Newsletter', 'action' => 'online'])
+            ->setPatterns(['campaignId' => '\d+', 'token' => '[a-f0-9]{32}']);
         $routes->connect('/'.__('route_search').'/*', ['controller' => 'Categories', 'action' => 'search']);
         $routes->connect('/'.__('route_category').'/{idAndSlug}', ['controller' => 'Categories', 'action' => 'detail'])
             ->setPatterns(['idAndSlug' => '[a-zA-Z0-9-]+'])

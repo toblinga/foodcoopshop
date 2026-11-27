@@ -165,6 +165,19 @@ if ($identity->isSuperadmin() || $identity->isAdmin()) {
         $menu[] = $blogPostsMenuElement;
     }
 
+    if (Configure::read('appDb.FCS_NEWSLETTER_ENABLED')) {
+        $menu[] = [
+            'slug' => '/admin/newsletter-campaigns',
+            'name' => 'Newsletter',
+            'options' => ['fa-icon' => 'fa-fw ok fa-paper-plane'],
+            'children' => [
+                ['slug' => '/admin/newsletter-campaigns', 'name' => 'Kampagnen', 'options' => ['fa-icon' => 'fa-fw ok fa-paper-plane']],
+                ['slug' => '/admin/newsletter-subscribers', 'name' => 'Abonnent:innen', 'options' => ['fa-icon' => 'fa-fw ok fa-users']],
+                ['slug' => '/admin/newsletter-templates', 'name' => 'Vorlagen und Bausteine', 'options' => ['fa-icon' => 'fa-fw ok fa-th-large']],
+            ],
+        ];
+    }
+
     $homepageAdministrationElement['children'][] = [
         'slug' => $this->Slug->getPagesListAdmin(),
         'name' => __('Pages'),

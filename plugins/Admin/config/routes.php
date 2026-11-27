@@ -23,6 +23,12 @@ return function (RouteBuilder $builder) {
             $builder->setExtensions(['pdf', 'xlsx']);
             $builder->connect('/', ['plugin' => 'Admin', 'controller' => 'Pages', 'action' => 'home']);
             $builder->redirect('/orders', '/admin/order-details?groupBy=customer');
+            // Newsletter-Spam-Check (JSON)
+            $builder->post(
+                '/newsletter/campaigns/{campaignId}/check',
+                ['plugin' => 'Admin', 'controller' => 'NewsletterSpamCheck', 'action' => 'check'],
+                'admin:newsletter:campaign:check',
+            )->setPass(['campaignId'])->setPatterns(['campaignId' => '\d+']);
             $builder->fallbacks(DashedRoute::class);
         }
     );

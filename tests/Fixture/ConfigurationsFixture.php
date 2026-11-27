@@ -459,6 +459,48 @@ class ConfigurationsFixture extends AppFixture
             'type' => 'boolean',
             'position' => 584,
         ],
+        [
+            'name' => 'FCS_MAIL_TRANSPORT',
+            'active' => 1,
+            'value' => 'own_smtp',
+            'type' => 'dropdown',
+            'position' => 3405,
+        ],
+        [
+            'name' => 'FCS_MAIL_MAX_PER_MINUTE',
+            'active' => 1,
+            'value' => '0',
+            'type' => 'number',
+            'position' => 3406,
+        ],
+        [
+            'name' => 'FCS_NEWSLETTER_SENDS_PER_MINUTE',
+            'active' => 1,
+            'value' => '20',
+            'type' => 'number',
+            'position' => 3410,
+        ],
+        [
+            'name' => 'FCS_NEWSLETTER_SENDER_NAME',
+            'active' => 1,
+            'value' => '',
+            'type' => 'text',
+            'position' => 3420,
+        ],
+        [
+            'name' => 'FCS_NEWSLETTER_SENDER_EMAIL',
+            'active' => 1,
+            'value' => '',
+            'type' => 'text',
+            'position' => 3430,
+        ],
+        [
+            'name' => 'FCS_NEWSLETTER_CONSENT_TEXT',
+            'active' => 1,
+            'value' => 'Ja, ich möchte den Newsletter per E-Mail erhalten.',
+            'type' => 'textarea',
+            'position' => 3440,
+        ],
     ];
 
 }
