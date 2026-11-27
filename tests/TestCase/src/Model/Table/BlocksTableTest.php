@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use App\Model\Entity\Block;
 use App\Test\TestCase\AppCakeTestCase;
 
 /**
@@ -63,6 +64,42 @@ class BlocksTableTest extends AppCakeTestCase
 
         $this->assertTrue($entity->hasErrors());
         $this->assertArrayHasKey('position', $entity->getErrors());
+    }
+
+    public function testValidationRejectsUnknownVisibility(): void
+    {
+        $blocksTable = $this->getTableLocator()->get('Blocks');
+        $entity = $blocksTable->newEntity([
+            'heading' => 'Heading',
+            'content' => 'Text',
+            'position' => 0,
+            'active' => 1,
+            'visibility' => 'everyone',
+        ]);
+
+        $this->assertArrayHasKey('visibility', $entity->getErrors());
+    }
+
+    public function testGetForHomeFiltersByVisibility(): void
+    {
+        $blocksTable = $this->getTableLocator()->get('Blocks');
+        $blocksTable->updateAll(['visibility' => Block::VISIBILITY_BOTH], ['id' => 1]);
+        foreach ([Block::VISIBILITY_LOGGED_IN, Block::VISIBILITY_LOGGED_OUT] as $visibility) {
+            $blocksTable->save($blocksTable->newEntity([
+                'image_position' => Block::IMAGE_POSITION_LEFT,
+                'heading' => 'Block ' . $visibility,
+                'content' => '<p>Text</p>',
+                'position' => 20,
+                'active' => 1,
+                'visibility' => $visibility,
+            ]));
+        }
+
+        $headingsForGuests = array_map(fn (Block $block): string => $block->heading, $blocksTable->getForHome(false)->all()->toArray());
+        $headingsForMembers = array_map(fn (Block $block): string => $block->heading, $blocksTable->getForHome(true)->all()->toArray());
+
+        $this->assertSame(['Demo block', 'Block logged_out'], $headingsForGuests);
+        $this->assertSame(['Demo block', 'Block logged_in'], $headingsForMembers);
     }
 
     public function testValidationRejectsInvalidButtonLinksAndPairs(): void

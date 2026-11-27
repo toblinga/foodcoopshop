@@ -38,6 +38,7 @@ class BlocksFixture extends AppFixture
             'secondary_href' => null,
             'position' => 10,
             'active' => 1,
+            'visibility' => 'both',
         ],
     ];
 

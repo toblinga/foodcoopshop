@@ -74,6 +74,7 @@ class BlocksTable extends AppTable
         $validator->greaterThanOrEqual('position', 0, __('Please_enter_a_number_between_{0}_and_{1}.', [0, 9999]));
 
         $validator->boolean('active');
+        $validator->inList('visibility', Block::VISIBILITIES, __('Please_choose_one_of_the_available_options.'));
         $validator->allowEmptyString('image');
         $validator->notEmptyString('image_position', __('Please_choose_one_of_the_available_options.'));
         $validator->inList('image_position', [Block::IMAGE_POSITION_LEFT, Block::IMAGE_POSITION_RIGHT], __('Please_choose_one_of_the_available_options.'));
@@ -128,11 +129,14 @@ class BlocksTable extends AppTable
     /**
      * @return SelectQuery<\App\Model\Entity\Block>
      */
-    public function getForHome(): SelectQuery
+    public function getForHome(bool $isLoggedIn): SelectQuery
     {
+        $visibleFor = [Block::VISIBILITY_BOTH, $isLoggedIn ? Block::VISIBILITY_LOGGED_IN : Block::VISIBILITY_LOGGED_OUT];
+
         return $this->find('all',
             conditions: [
                 'Blocks.active' => APP_ON,
+                'Blocks.visibility IN' => $visibleFor,
             ],
             order: [
                 'Blocks.position' => 'ASC',

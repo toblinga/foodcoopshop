@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use App\Command\SavedLocalizedJsAsStaticFileCommand;
+use App\Model\Entity\Block;
 use App\Model\Entity\Payment;
 use App\Test\TestCase\AppCakeTestCase;
 use App\Test\TestCase\Traits\AppIntegrationTestTrait;
@@ -212,17 +213,42 @@ class PagesControllerTest extends AppCakeTestCase
         $this->assertResponseCode(200);
     }
 
-    public function testHomeBlocksVisibleOnlyForGuests(): void
+    public function testHomeBlockVisibilityBoth(): void
     {
+        $this->setHomeBlockVisibility(Block::VISIBILITY_BOTH);
         $this->get($this->Slug->getHome());
-        $this->assertResponseOk();
         $this->assertResponseContains('Demo block content');
 
         $this->loginAsSuperadmin();
         $this->get($this->Slug->getHome());
-        $this->assertResponseOk();
+        $this->assertResponseContains('Demo block content');
+    }
+
+    public function testHomeBlockVisibilityLoggedInOnly(): void
+    {
+        $this->setHomeBlockVisibility(Block::VISIBILITY_LOGGED_IN);
+        $this->get($this->Slug->getHome());
         $this->assertResponseNotContains('Demo block content');
-        $this->logout();
+
+        $this->loginAsSuperadmin();
+        $this->get($this->Slug->getHome());
+        $this->assertResponseContains('Demo block content');
+    }
+
+    public function testHomeBlockVisibilityLoggedOutOnly(): void
+    {
+        $this->setHomeBlockVisibility(Block::VISIBILITY_LOGGED_OUT);
+        $this->get($this->Slug->getHome());
+        $this->assertResponseContains('Demo block content');
+
+        $this->loginAsSuperadmin();
+        $this->get($this->Slug->getHome());
+        $this->assertResponseNotContains('Demo block content');
+    }
+
+    private function setHomeBlockVisibility(string $visibility): void
+    {
+        $this->getTableLocator()->get('Blocks')->updateAll(['visibility' => $visibility], ['id' => 1]);
     }
 
     public function testPageDetailOfflinePublicLoggedOut(): void

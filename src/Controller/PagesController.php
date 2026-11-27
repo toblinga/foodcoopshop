@@ -71,12 +71,11 @@ class PagesController extends FrontendController
             ];
         }
 
-        if ($this->identity === null) {
-            $blocksTable = $this->getTableLocator()->get('Blocks');
-            $blocks = $blocksTable->getForHome()->all()->toArray();
-            if (!empty($blocks)) {
-                $homeBlocks = array_merge($homeBlocks, $blocks);
-            }
+        // Sichtbarkeit pro Block (both / logged_in / logged_out) wird in BlocksTable::getForHome gefiltert
+        $blocksTable = $this->getTableLocator()->get('Blocks');
+        $blocks = $blocksTable->getForHome($this->identity !== null)->all()->toArray();
+        if (!empty($blocks)) {
+            $homeBlocks = array_merge($homeBlocks, $blocks);
         }
         $this->set('homeBlocks', $homeBlocks);
 

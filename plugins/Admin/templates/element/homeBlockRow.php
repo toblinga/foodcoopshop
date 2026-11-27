@@ -124,6 +124,17 @@ if (!empty($block['tmp_image'])) {
                     'type' => 'text',
                     'value' => $block['position'] ?? 0,
                 ]);
+                echo $this->Form->control('Blocks.' . $rowKey . '.visibility', [
+                    'type' => 'select',
+                    'class' => 'no-tom-select',
+                    'label' => __('Visibility'),
+                    'options' => [
+                        Block::VISIBILITY_BOTH => __('Visible for logged in and logged out users'),
+                        Block::VISIBILITY_LOGGED_IN => __('Visible only for logged in users'),
+                        Block::VISIBILITY_LOGGED_OUT => __('Visible only for logged out users'),
+                    ],
+                    'value' => !empty($block['visibility']) ? (string)$block['visibility'] : Block::VISIBILITY_BOTH,
+                ]);
                 echo $this->Form->control('Blocks.' . $rowKey . '.active', [
                     'label' => __('Active'),
                     'type' => 'checkbox',
