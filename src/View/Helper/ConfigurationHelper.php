@@ -62,6 +62,11 @@ class ConfigurationHelper extends Helper
                     'opt_out' => __('Contacts_mode_opt_out'),
                     'all' => __('Contacts_mode_all'),
                 ];
+            case 'FCS_MAIL_TRANSPORT':
+                return [
+                    'own_smtp' => __('Mail_transport_own_smtp'),
+                    'relay' => __('Mail_transport_relay'),
+                ];
             case 'FCS_CASHLESS_PAYMENT_ADD_TYPE':
                 return $this->getCashlessPaymentAddTypeOptions();
             case 'FCS_FONT_HEADER_PROMO_TITLE':

@@ -22,6 +22,7 @@ use Throwable;
 use Cake\I18n\DateTime;
 use App\Model\Entity\OrderDetail;
 use Cake\ORM\TableRegistry;
+use App\Services\MailTransportService;
 
 class AppEmailTask extends EmailTask
 {
@@ -34,6 +35,11 @@ class AppEmailTask extends EmailTask
 
         try {
             $afterRunParams = $data['afterRunParams'];
+            // central choice of the mail route (FCS_MAIL_TRANSPORT: own_smtp / relay) and throttling (FCS_MAIL_MAX_PER_MINUTE)
+            if (empty($data['transport'])) {
+                $data['transport'] = MailTransportService::getTransportName();
+            }
+            MailTransportService::waitForSendSlot();
             parent::run($data, $jobId);
         } catch(Throwable $e) {
             if (!empty($data['afterRunParams'])) {

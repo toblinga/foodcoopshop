@@ -1,0 +1,202 @@
+/**
+ * Newsletter: Anmeldeformular (Startseite und /newsletter) und Meldungsseiten.
+ * Nutzt die Instanzfarbe (--theme-color) und die Bootstrap-Buttons der FCS.
+ */
+
+.newsletter-signup {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 30px 0;
+    clear: both;
+}
+.newsletter-signup *,
+.newsletter-signup *::before,
+.newsletter-signup *::after {
+    box-sizing: border-box;
+}
+.newsletter-signup-inner {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 4px solid var(--theme-color);
+    border-radius: 10px;
+    padding: 26px 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+.newsletter-signup-teaser .newsletter-signup-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    gap: 10px 36px;
+    align-items: start;
+}
+.newsletter-signup-intro h2 {
+    margin: 0 0 8px 0;
+    color: var(--theme-color);
+}
+.newsletter-signup-intro p {
+    margin: 0 0 10px 0;
+    line-height: 1.5;
+}
+.newsletter-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 12px 16px;
+}
+.newsletter-signup,
+.newsletter-signup label,
+.newsletter-signup input,
+.newsletter-signup button {
+    font-family: inherit;
+}
+.newsletter-field label,
+.newsletter-consent label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+.newsletter-field .optional {
+    font-weight: normal;
+    color: #777;
+}
+.newsletter-field input {
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 12px;
+    font-size: 16px; /* verhindert Zoom auf iOS */
+    border: 1px solid #c9c6bf;
+    border-radius: 6px;
+    background: #fff;
+}
+.newsletter-field input:focus {
+    outline: 2px solid var(--theme-color);
+    outline-offset: 1px;
+    border-color: var(--theme-color);
+}
+.newsletter-consent {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 4px 10px;
+    margin-top: 14px;
+    align-items: start;
+}
+.newsletter-consent input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0 0;
+    accent-color: var(--theme-color);
+}
+.newsletter-consent label {
+    font-weight: normal;
+    line-height: 1.45;
+    margin: 0;
+}
+.newsletter-consent .newsletter-error {
+    grid-column: 2;
+}
+.newsletter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin-top: 16px;
+}
+.newsletter-actions .btn {
+    min-width: 170px;
+    min-height: 44px;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-size: 16px;
+}
+.newsletter-hint {
+    font-size: 13px;
+    color: #666;
+}
+.newsletter-error {
+    color: #b00020;
+    font-size: 14px;
+    margin-top: 4px;
+}
+.newsletter-field.has-error input {
+    border-color: #b00020;
+}
+/* Honeypot: für Menschen unsichtbar, für Screenreader ausgeblendet */
+.newsletter-hp {
+    position: absolute !important;
+    left: -10000px !important;
+    top: auto !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+}
+.newsletter-signup .visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+}
+
+.newsletter-page {
+    max-width: 760px;
+}
+.newsletter-page-lead {
+    font-size: 17px;
+    line-height: 1.55;
+}
+.newsletter-page .newsletter-signup {
+    margin-top: 16px;
+}
+.newsletter-message p {
+    line-height: 1.55;
+}
+.newsletter-message .btn {
+    margin: 6px 8px 6px 0;
+    border-radius: 24px;
+    padding: 9px 20px;
+}
+
+/* Dunkelmodus der FCS (body.dark) */
+body.dark .newsletter-signup-inner {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--dark-mode-main-border-color);
+    border-top-color: var(--theme-color);
+    box-shadow: none;
+}
+body.dark .newsletter-field input {
+    background: var(--dark-mode-main-bg-color);
+    color: var(--dark-mode-main-font-color);
+    border-color: var(--dark-mode-main-border-color);
+}
+body.dark .newsletter-hint,
+body.dark .newsletter-field .optional {
+    color: #a8a8a8;
+}
+body.dark .newsletter-error {
+    color: #ff8a80;
+}
+
+@media (max-width: 900px) {
+    .newsletter-signup-teaser .newsletter-signup-inner {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 600px) {
+    .newsletter-signup {
+        margin: 20px 0;
+    }
+    .newsletter-signup-inner {
+        padding: 18px 16px;
+        border-radius: 8px;
+    }
+    .newsletter-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .newsletter-actions .btn {
+        width: 100%;
+    }
+    .newsletter-hint {
+        width: 100%;
+        text-align: center;
+    }
+}

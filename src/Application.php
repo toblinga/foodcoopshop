@@ -39,6 +39,8 @@ use Authentication\AuthenticationServiceProviderInterface;
 use Authorization\AuthorizationServiceProviderInterface;
 use Cake\Http\ServerRequest;
 use App\Policy\RequestPolicy;
+use App\Event\NewsletterCustomerListener;
+use Cake\Event\EventManager;
 use Authorization\Exception\MissingIdentityException;
 use Authorization\Exception\ForbiddenException;
 use Authentication\Identifier\Resolver\OrmResolver;
@@ -113,6 +115,24 @@ class Application extends BaseApplication
             $this->addPlugin('Network');
         }
 
+        self::registerGlobalListeners();
+
+    }
+
+    private static ?EventManager $listenersRegisteredOn = null;
+
+    /**
+     * Global model listeners, registered once per global EventManager
+     * (Application is created per request in integration tests, TestCase replaces the global EventManager).
+     */
+    public static function registerGlobalListeners(): void
+    {
+        $eventManager = EventManager::instance();
+        if (self::$listenersRegisteredOn === $eventManager) {
+            return;
+        }
+        $eventManager->on(new NewsletterCustomerListener());
+        self::$listenersRegisteredOn = $eventManager;
     }
 
     /**
@@ -166,7 +186,9 @@ class Application extends BaseApplication
         // Token check will be skipped when callback returns `true`.
         $apiUrls = $this->getApiUrls();
         $csrf->skipCheckCallback(function ($request) use ($apiUrls) {
-            return in_array($request->getUri()->getPath(), $apiUrls) || $this->isRestApiPath($request->getUri()->getPath());
+            return in_array($request->getUri()->getPath(), $apiUrls) || $this->isRestApiPath($request->getUri()->getPath())
+                // RFC 8058 One-Click-Abmeldung: Mailprogramme schicken POST ohne CSRF-Token (Token in der URL)
+                || ($request->getMethod() === 'POST' && str_starts_with($request->getUri()->getPath(), '/newsletter/abmelden/'));
         });
 
         $authorizationMiddlewareConfig = [];

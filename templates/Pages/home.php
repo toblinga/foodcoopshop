@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Cake\Core\Configure;
 use App\Model\Entity\Block;
+use App\Services\Newsletter\NewsletterSubscriberService;
 
 /**
  * FoodCoopShop - The open source software for your foodcoop
@@ -95,6 +96,10 @@ if (!empty($homeBlocks)) {
             echo '</article>';
         }
     echo '</section>';
+}
+
+if (NewsletterSubscriberService::isEnabled()) {
+    echo $this->element('Newsletter/signupForm', ['variant' => 'teaser']);
 }
 
 if (!empty($blogPosts) && $blogPosts->count() > 0) {

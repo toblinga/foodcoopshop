@@ -6000,3 +6000,45 @@ msgstr "Individueller Bestellschluss"
 msgid "Bulk_orders"
 msgstr "Sammelbestellungen"
 
+
+msgid "Configuration_text_FCS_MAIL_TRANSPORT"
+msgstr "Mailweg für alle E-Mails"
+
+msgid "Configuration_subtext_FCS_MAIL_TRANSPORT"
+msgstr "Eigener SMTP = EmailTransport „default“, Relay = EmailTransport „relay“ (Zugangsdaten in credentials.php). Gilt für alle Mails (Bestellungen, Erinnerungen, Passwort, Newsletter)."
+
+msgid "Mail_transport_own_smtp"
+msgstr "Eigener SMTP"
+
+msgid "Mail_transport_relay"
+msgstr "Externer Relay"
+
+msgid "Configuration_text_FCS_MAIL_MAX_PER_MINUTE"
+msgstr "Höchstens so viele E-Mails pro Minute (alle Mails)"
+
+msgid "Configuration_subtext_FCS_MAIL_MAX_PER_MINUTE"
+msgstr "0 = unbegrenzt. Die Queue wartet, wenn die Grenze erreicht ist."
+
+msgid "Configuration_text_FCS_NEWSLETTER_SENDS_PER_MINUTE"
+msgstr "Newsletter: Mails pro Minute"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_SENDS_PER_MINUTE"
+msgstr "Drosselung des Newsletter-Versands (Standard 20)."
+
+msgid "Configuration_text_FCS_NEWSLETTER_SENDER_NAME"
+msgstr "Newsletter: Absendername"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_SENDER_NAME"
+msgstr "Leer = Name der Foodcoop."
+
+msgid "Configuration_text_FCS_NEWSLETTER_SENDER_EMAIL"
+msgstr "Newsletter: Absenderadresse"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_SENDER_EMAIL"
+msgstr "Leer = Standard-Absender. Die Domain muss beim Mailweg (SPF/DKIM) freigegeben sein."
+
+msgid "Configuration_text_FCS_NEWSLETTER_CONSENT_TEXT"
+msgstr "Newsletter: Einwilligungstext im Anmeldeformular"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_CONSENT_TEXT"
+msgstr "Wird bei jeder Anmeldung mitgespeichert. Der Link zur Datenschutzerklärung wird automatisch ergänzt."

@@ -15,6 +15,7 @@ use ArrayObject;
 use App\Controller\Component\StringComponent;
 use Cake\Routing\Router;
 use App\Services\PickupDayExceptionService;
+use App\Services\MailTransportService;
 
 /**
  * FoodCoopShop - The open source software for your foodcoop
@@ -161,6 +162,44 @@ class ConfigurationsTable extends AppTable
     public function validationFcsNewsletterEnabled(Validator $validator): Validator
     {
         return $this->getNumberRangeValidator($validator, 'value', 0, 1);
+    }
+
+    public function validationFcsMailTransport(Validator $validator): Validator
+    {
+        $validator->inList('value', [MailTransportService::MODE_OWN_SMTP, MailTransportService::MODE_RELAY], __('Please_choose_one_of_the_available_options.'));
+        return $validator;
+    }
+
+    public function validationFcsMailMaxPerMinute(Validator $validator): Validator
+    {
+        $validator->numeric('value', __('Decimals_are_not_allowed.'));
+        return $this->getNumberRangeValidator($validator, 'value', 0, 10000);
+    }
+
+    public function validationFcsNewsletterSendsPerMinute(Validator $validator): Validator
+    {
+        $validator->numeric('value', __('Decimals_are_not_allowed.'));
+        return $this->getNumberRangeValidator($validator, 'value', 1, 1000);
+    }
+
+    public function validationFcsNewsletterSenderEmail(Validator $validator): Validator
+    {
+        $validator->allowEmptyString('value');
+        $validator->email('value', false, __('The_email_address_is_not_valid.'));
+        return $validator;
+    }
+
+    public function validationFcsNewsletterSenderName(Validator $validator): Validator
+    {
+        $validator->allowEmptyString('value');
+        $validator->maxLength('value', 255);
+        return $validator;
+    }
+
+    public function validationFcsNewsletterConsentText(Validator $validator): Validator
+    {
+        $validator->notEmptyString('value');
+        return $validator;
     }
 
     public function validationFcsShowProductsForGuests(Validator $validator): Validator

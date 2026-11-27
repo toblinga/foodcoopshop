@@ -5683,3 +5683,45 @@ msgstr "Individual order deadline"
 msgid "Bulk_orders"
 msgstr "Bulk orders"
 
+
+msgid "Configuration_text_FCS_MAIL_TRANSPORT"
+msgstr "Mail route for all emails"
+
+msgid "Configuration_subtext_FCS_MAIL_TRANSPORT"
+msgstr "Own SMTP = EmailTransport \"default\", relay = EmailTransport \"relay\" (credentials in credentials.php). Applies to all emails (orders, reminders, password, newsletter)."
+
+msgid "Mail_transport_own_smtp"
+msgstr "Own SMTP"
+
+msgid "Mail_transport_relay"
+msgstr "External relay"
+
+msgid "Configuration_text_FCS_MAIL_MAX_PER_MINUTE"
+msgstr "Maximum emails per minute (all emails)"
+
+msgid "Configuration_subtext_FCS_MAIL_MAX_PER_MINUTE"
+msgstr "0 = unlimited. The queue waits when the limit is reached."
+
+msgid "Configuration_text_FCS_NEWSLETTER_SENDS_PER_MINUTE"
+msgstr "Newsletter: emails per minute"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_SENDS_PER_MINUTE"
+msgstr "Throttling of newsletter sending (default 20)."
+
+msgid "Configuration_text_FCS_NEWSLETTER_SENDER_NAME"
+msgstr "Newsletter: sender name"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_SENDER_NAME"
+msgstr "Empty = name of the foodcoop."
+
+msgid "Configuration_text_FCS_NEWSLETTER_SENDER_EMAIL"
+msgstr "Newsletter: sender address"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_SENDER_EMAIL"
+msgstr "Empty = default sender. The domain must be allowed for the mail route (SPF/DKIM)."
+
+msgid "Configuration_text_FCS_NEWSLETTER_CONSENT_TEXT"
+msgstr "Newsletter: consent text in the signup form"
+
+msgid "Configuration_subtext_FCS_NEWSLETTER_CONSENT_TEXT"
+msgstr "Saved with every signup. The link to the privacy policy is added automatically."
